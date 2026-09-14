@@ -5,9 +5,8 @@ import {
 
 const ICONS = { desayuno: '☀️', colacion: '🍎', almuerzo: '🍽️', merienda: '🍪', cena: '🌙' };
 
-export default function PatientDashboard() {
+export default function PatientDashboard({ view, onChangeView }) {
   const patient = PATIENTS.sofia;
-  const [view, setView] = useState('hoy');
   const [calDay, setCalDay] = useState(27);
   const [drafts, setDrafts] = useState({});
   const [saved, setSaved] = useState({ ...patient.log });
@@ -32,9 +31,9 @@ export default function PatientDashboard() {
       </div>
 
       <div className="patient-nav">
-        <button className={view === 'hoy' ? 'active' : ''} onClick={() => setView('hoy')}>Hoy</button>
-        <button className={view === 'calendario' ? 'active' : ''} onClick={() => setView('calendario')}>Calendario</button>
-        <button className={view === 'medidas' ? 'active' : ''} onClick={() => setView('medidas')}>Mediciones</button>
+        <button className={view === 'hoy' ? 'active' : ''} onClick={() => onChangeView('hoy')}>Hoy</button>
+        <button className={view === 'calendario' ? 'active' : ''} onClick={() => onChangeView('calendario')}>Calendario</button>
+        <button className={view === 'medidas' ? 'active' : ''} onClick={() => onChangeView('medidas')}>Mediciones</button>
       </div>
 
       {view === 'hoy' && (

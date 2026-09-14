@@ -8,15 +8,18 @@ import PatientDashboard from './components/PatientDashboard.jsx';
 export default function App() {
   const [session, setSession] = useState(null); // null | 'nutri' | 'paciente'
   const [openPatient, setOpenPatient] = useState(null);
+  const [patientView, setPatientView] = useState('hoy');
 
   function handleLogin(role) {
     setSession(role);
     setOpenPatient(null);
+    setPatientView('hoy');
   }
 
   function handleLogout() {
     setSession(null);
     setOpenPatient(null);
+    setPatientView('hoy');
   }
 
   if (!session) {
@@ -26,8 +29,12 @@ export default function App() {
   if (session === 'paciente') {
     return (
       <>
-        <Header subtitle="Vista paciente" onLogout={handleLogout} />
-        <PatientDashboard />
+        <Header
+          subtitle="Vista paciente"
+          onLogout={handleLogout}
+          onBack={() => setPatientView('hoy')}
+        />
+        <PatientDashboard view={patientView} onChangeView={setPatientView} />
       </>
     );
   }
@@ -37,7 +44,7 @@ export default function App() {
       <Header
         subtitle="Vista nutricionista"
         onLogout={handleLogout}
-        onBack={openPatient ? () => setOpenPatient(null) : undefined}
+        onBack={() => setOpenPatient(null)}
       />
       {openPatient ? (
         <PatientDetail patientKey={openPatient} />
