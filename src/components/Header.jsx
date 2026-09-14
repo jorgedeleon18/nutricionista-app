@@ -1,4 +1,4 @@
-export default function Header({ subtitle, onLogout }) {
+export default function Header({ subtitle, onLogout, onBack }) {
   return (
     <header className="app-header">
       <div className="brand">
@@ -8,9 +8,16 @@ export default function Header({ subtitle, onLogout }) {
           <span>{subtitle}</span>
         </div>
       </div>
-      {onLogout && (
-        <button className="btn-ghost" onClick={onLogout}>Cerrar sesión</button>
-      )}
+      <div className="header-actions">
+        {onBack && (
+          <button className="pill-btn" onClick={onBack}>
+            <span className="ic">🏠</span> Inicio
+          </button>
+        )}
+        {onLogout && (
+          <button className="btn-ghost" onClick={onLogout}>Cerrar sesión</button>
+        )}
+      </div>
     </header>
   );
 }

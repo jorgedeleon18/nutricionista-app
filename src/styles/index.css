@@ -31,6 +31,22 @@ button, input, textarea{font-family:inherit;}
 }
 .btn-ghost:hover{background:var(--pink-soft); border-color:var(--pink);}
 
+.header-actions{display:flex; align-items:center; gap:10px;}
+.pill-btn{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 18px 9px 14px; border-radius:999px; cursor:pointer;
+  background:rgba(232,93,130,0.14);
+  -webkit-backdrop-filter:blur(14px) saturate(180%);
+  backdrop-filter:blur(14px) saturate(180%);
+  border:1px solid rgba(232,93,130,0.35);
+  color:var(--pink2); font-weight:800; font-size:13px;
+  box-shadow:0 4px 14px rgba(232,93,130,0.15);
+  transition:transform .15s ease, background .15s ease;
+}
+.pill-btn:hover{background:rgba(232,93,130,0.24); transform:translateY(-1px);}
+.pill-btn:active{transform:translateY(0);}
+.pill-btn .ic{font-size:15px; line-height:1;}
+
 .page{max-width:1240px; margin:0 auto; padding:32px;}
 
 /* ---------- LOGIN ---------- */
@@ -107,7 +123,8 @@ button, input, textarea{font-family:inherit;}
 .clinica-box textarea{width:100%; min-height:160px; border:1px solid var(--border); border-radius:14px; padding:14px; font-size:14px; line-height:1.6; font-family:inherit; color:var(--ink); resize:vertical; outline:none;}
 .clinica-box textarea:focus{border-color:var(--pink);}
 
-table.medidas-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+.medidas-box{overflow-x:auto;}
+table.medidas-table{width:100%; min-width:460px; border-collapse:collapse; font-size:13.5px;}
 table.medidas-table th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); padding:10px 12px; border-bottom:2px solid var(--border);}
 table.medidas-table td{padding:12px; border-bottom:1px solid var(--border);}
 table.medidas-table tr:last-child td{font-weight:800; background:var(--green-soft);}
@@ -166,4 +183,54 @@ textarea.box:focus{border-color:var(--pink);}
 @media (max-width: 900px){
   .cal-layout{flex-direction:column;}
   .cal-left{width:100%; border-right:none; border-bottom:1px solid var(--border);}
+  .page{padding:24px;}
+}
+
+/* ---------- RESPONSIVE: TABLET / CELULAR ---------- */
+@media (max-width: 640px){
+  body{overflow-x:hidden;}
+  .page{padding:16px;}
+
+  .app-header{padding:12px 16px; flex-wrap:wrap; gap:10px;}
+  .app-header .brand{gap:9px;}
+  .app-header .brand img{width:32px; height:32px;}
+  .app-header .brand b{font-size:14px;}
+  .app-header .brand span{font-size:9.5px;}
+  .header-actions{gap:7px;}
+  .btn-ghost{padding:8px 12px; font-size:12px;}
+  .pill-btn{padding:8px 14px 8px 11px; font-size:12px;}
+
+  .login-card{padding:30px 22px; border-radius:20px;}
+  .login-card h1{font-size:18px;}
+
+  .mosaico-head h1{font-size:21px;}
+  .searchbar{max-width:100%;}
+  .plist{grid-template-columns:1fr;}
+
+  .detalle-head{gap:10px; margin-bottom:18px;}
+  .detalle-head .who b{font-size:17px;}
+  .avatar{width:40px !important; height:40px !important;}
+
+  .tabs{
+    flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    max-width:100%; scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:0 0 auto; min-width:auto; padding:9px 14px;}
+
+  .days{gap:5px;}
+  .day{padding:9px 0; font-size:11px;}
+
+  .meal-grid{grid-template-columns:1fr;}
+  .hoy-grid{grid-template-columns:1fr;}
+
+  .cal-left{padding:18px;}
+  .cal-right{padding:20px 18px;}
+  .cell{font-size:11px;}
+
+  .patient-nav{max-width:100%;}
+  .patient-nav button{padding:11px 0; font-size:12px;}
+  .progress{max-width:100%;}
+
+  table.medidas-table{font-size:12.5px;}
 }

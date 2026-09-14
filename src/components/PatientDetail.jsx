@@ -35,7 +35,7 @@ function buildCalendarCells(patient, selectedDay, onSelect) {
   return cells;
 }
 
-export default function PatientDetail({ patientKey, onBack }) {
+export default function PatientDetail({ patientKey }) {
   const patient = PATIENTS[patientKey];
   const [tab, setTab] = useState('registro');
   const [dayIndex, setDayIndex] = useState(2); // miércoles 27
@@ -49,7 +49,6 @@ export default function PatientDetail({ patientKey, onBack }) {
   return (
     <div className="page">
       <div className="detalle-head">
-        <button className="iconbtn" onClick={onBack} title="Volver">←</button>
         <div className="avatar" style={{ background: patient.color, width: 44, height: 44 }}>{patient.initials}</div>
         <div className="who">
           <b>{patient.name}</b>

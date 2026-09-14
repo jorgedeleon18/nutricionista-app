@@ -34,9 +34,13 @@ export default function App() {
 
   return (
     <>
-      <Header subtitle="Vista nutricionista" onLogout={handleLogout} />
+      <Header
+        subtitle="Vista nutricionista"
+        onLogout={handleLogout}
+        onBack={openPatient ? () => setOpenPatient(null) : undefined}
+      />
       {openPatient ? (
-        <PatientDetail patientKey={openPatient} onBack={() => setOpenPatient(null)} />
+        <PatientDetail patientKey={openPatient} />
       ) : (
         <Mosaico onOpenPatient={setOpenPatient} />
       )}
