@@ -1,19 +1,36 @@
 import { useState } from 'react';
 import { avatarColor, ESTADO_LABEL } from '../data/patients.js';
+import ConfirmDialog from './ConfirmDialog.jsx';
 
 export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [genero, setGenero] = useState('F');
   const [reenviado, setReenviado] = useState(null);
+  const [confirmInvitar, setConfirmInvitar] = useState(false);
+  const [confirmEstado, setConfirmEstado] = useState(null); // { key, name, next }
 
   function handleInvitar(e) {
     e.preventDefault();
     if (!nombre.trim() || !email.trim()) return;
+    setConfirmInvitar(true);
+  }
+
+  function confirmarInvitacion() {
     onInvitar({ nombre: nombre.trim(), email: email.trim(), genero });
     setNombre('');
     setEmail('');
     setGenero('F');
+    setConfirmInvitar(false);
+  }
+
+  function pedirConfirmacionEstado(key, a) {
+    setConfirmEstado({ key, name: a.name, next: a.acceso === 'activo' ? 'inactivo' : 'activo' });
+  }
+
+  function confirmarEstado() {
+    if (confirmEstado) onToggleEstado(confirmEstado.key);
+    setConfirmEstado(null);
   }
 
   function reenviar(key) {
@@ -108,7 +125,7 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
                       </button>
                     )}
                     {a.acceso !== 'invitado' && (
-                      <button className="btn-sm danger" onClick={() => onToggleEstado(key)}>
+                      <button className="btn-sm danger" onClick={() => pedirConfirmacionEstado(key, a)}>
                         {a.acceso === 'activo' ? 'Dar de baja' : 'Reactivar'}
                       </button>
                     )}
@@ -119,6 +136,29 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={confirmInvitar}
+        title="¿Invitar a este paciente?"
+        message={`Le vamos a dar acceso a ${nombre.trim() || 'este paciente'} con el email ${email.trim()}. Va a arrancar con el plan y las mediciones vacías.`}
+        confirmLabel="Sí, invitar"
+        onConfirm={confirmarInvitacion}
+        onCancel={() => setConfirmInvitar(false)}
+      />
+
+      <ConfirmDialog
+        open={!!confirmEstado}
+        title={confirmEstado?.next === 'inactivo' ? '¿Dar de baja a este paciente?' : '¿Reactivar a este paciente?'}
+        message={
+          confirmEstado?.next === 'inactivo'
+            ? `${confirmEstado?.name} va a dejar de tener acceso a la app hasta que lo reactivés.`
+            : `${confirmEstado?.name} va a volver a tener acceso a la app.`
+        }
+        confirmLabel={confirmEstado?.next === 'inactivo' ? 'Sí, dar de baja' : 'Sí, reactivar'}
+        danger={confirmEstado?.next === 'inactivo'}
+        onConfirm={confirmarEstado}
+        onCancel={() => setConfirmEstado(null)}
+      />
     </div>
   );
 }

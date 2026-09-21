@@ -4,6 +4,7 @@ import {
   registroDelDia, statusForDay, avatarColor,
   TODAY, MONTH_NAMES, fechaKey, daysInMonth, firstWeekdayMonday,
 } from '../data/patients.js';
+import ConfirmDialog from './ConfirmDialog.jsx';
 
 const TABS = [
   { key: 'plan', label: 'Plan asignado' },
@@ -73,6 +74,8 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient })
   const [nuevaMedida, setNuevaMedida] = useState(MEDIDA_VACIA);
   const [addingTurno, setAddingTurno] = useState(false);
   const [nuevoTurno, setNuevoTurno] = useState(TURNO_VACIO);
+  const [confirmTurno, setConfirmTurno] = useState(false);
+  const [confirmCancelTurno, setConfirmCancelTurno] = useState(null);
 
   const reg = registroDelDia(patient, dayIndex);
 
@@ -121,6 +124,10 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient })
   function handleAgregarTurno(e) {
     e.preventDefault();
     if (!nuevoTurno.fecha || !nuevoTurno.hora) return;
+    setConfirmTurno(true);
+  }
+
+  function confirmarAgregarTurno() {
     const nuevo = { fecha: nuevoTurno.fecha, hora: nuevoTurno.hora, motivo: nuevoTurno.motivo };
     onUpdatePatient(patientKey, (prev) => ({ turnos: [...(prev.turnos || []), nuevo] }));
     const [y, m] = nuevoTurno.fecha.split('-').map(Number);
@@ -129,12 +136,21 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient })
     setCalFecha(nuevoTurno.fecha);
     setNuevoTurno(TURNO_VACIO);
     setAddingTurno(false);
+    setConfirmTurno(false);
   }
 
-  function cancelarTurno(fecha, hora) {
-    onUpdatePatient(patientKey, (prev) => ({
-      turnos: (prev.turnos || []).filter((t) => !(t.fecha === fecha && t.hora === hora)),
-    }));
+  function pedirCancelarTurno(t) {
+    setConfirmCancelTurno(t);
+  }
+
+  function confirmarCancelarTurno() {
+    if (confirmCancelTurno) {
+      const { fecha, hora } = confirmCancelTurno;
+      onUpdatePatient(patientKey, (prev) => ({
+        turnos: (prev.turnos || []).filter((t) => !(t.fecha === fecha && t.hora === hora)),
+      }));
+    }
+    setConfirmCancelTurno(null);
   }
 
   return (
@@ -328,7 +344,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient })
                           {t.fecha === HOY_KEY ? 'Hoy' : d.toLocaleDateString('es-AR', { weekday: 'long' })}
                         </span>
                       </div>
-                      <button className="turno-cancel" title="Cancelar turno" onClick={() => cancelarTurno(t.fecha, t.hora)}>×</button>
+                      <button className="turno-cancel" title="Cancelar turno" onClick={() => pedirCancelarTurno(t)}>×</button>
                     </div>
                   );
                 })}
@@ -438,6 +454,33 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient })
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmTurno}
+        title="¿Confirmar el turno?"
+        message={
+          nuevoTurno.fecha
+            ? `Turno para ${patient.name} el ${new Date(nuevoTurno.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} a las ${nuevoTurno.hora}${nuevoTurno.avisar ? '. Se le va a avisar por mail (demo).' : '.'}`
+            : ''
+        }
+        confirmLabel="Sí, guardar turno"
+        onConfirm={confirmarAgregarTurno}
+        onCancel={() => setConfirmTurno(false)}
+      />
+
+      <ConfirmDialog
+        open={!!confirmCancelTurno}
+        title="¿Cancelar este turno?"
+        message={
+          confirmCancelTurno
+            ? `Se va a eliminar el turno del ${new Date(confirmCancelTurno.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} a las ${confirmCancelTurno.hora}.`
+            : ''
+        }
+        confirmLabel="Sí, cancelar turno"
+        danger
+        onConfirm={confirmarCancelarTurno}
+        onCancel={() => setConfirmCancelTurno(null)}
+      />
     </div>
   );
 }
