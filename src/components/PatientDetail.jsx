@@ -231,6 +231,16 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
             {t.label}
           </button>
         ))}
+        <button
+          type="button"
+          className="tab tab-turno"
+          onClick={() => {
+            setTab('calendario');
+            setAddingTurno(true);
+          }}
+        >
+          📅 Nuevo turno
+        </button>
       </div>
 
       {tab === 'plan' && (
