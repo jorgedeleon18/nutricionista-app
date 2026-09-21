@@ -363,9 +363,16 @@ table.accesos-table tr:last-child td{border-bottom:none;}
   .app-header .brand img{width:32px; height:32px;}
   .app-header .brand b{font-size:14px;}
   .app-header .brand span{font-size:9.5px;}
-  .header-actions{gap:7px;}
+  .header-actions{gap:7px; flex-wrap:wrap; row-gap:8px;}
   .btn-ghost{padding:8px 12px; font-size:12px;}
   .pill-btn{padding:8px 14px 8px 11px; font-size:12px;}
+
+  .modal-card{padding:22px 20px; border-radius:16px;}
+  .cred-box{padding:12px 14px; gap:10px;}
+  .cred-box>div{flex-wrap:wrap; gap:4px;}
+  .cred-value{word-break:break-all;}
+  .modal-actions{flex-wrap:wrap;}
+  .modal-actions button{flex:1; min-width:100px;}
 
   .login-card{padding:30px 22px; border-radius:20px;}
   .login-card h1{font-size:18px;}
@@ -375,8 +382,10 @@ table.accesos-table tr:last-child td{border-bottom:none;}
   .plist{grid-template-columns:1fr;}
   .side-card{padding:18px;}
 
-  .detalle-head{gap:10px; margin-bottom:18px;}
+  .detalle-head{gap:10px; margin-bottom:18px; flex-wrap:wrap;}
   .detalle-head .who b{font-size:17px;}
+  .detalle-head .who{min-width:0;}
+  .detalle-head > button{margin-left:0 !important; width:100%;}
   .avatar{width:40px !important; height:40px !important;}
 
   .tabs{
