@@ -98,11 +98,27 @@ export async function deleteTurno(pacienteId, fecha, hora) {
   if (error) throw error;
 }
 
+// Cuando una Edge Function responde con un status distinto de 2xx, supabase-js
+// tira un error "genérico" (FunctionsHttpError) y no nos da el mensaje real
+// que mandamos nosotros en el body ({ error: "..." }). Hay que leerlo a mano
+// desde el Response que viene en error.context.
+async function mensajeDeErrorFuncion(error) {
+  try {
+    if (error?.context && typeof error.context.json === 'function') {
+      const body = await error.context.json();
+      if (body?.error) return body.error;
+    }
+  } catch {
+    // si no se pudo parsear, seguimos con el mensaje genérico de abajo
+  }
+  return error?.message || 'Error desconocido';
+}
+
 export async function invitarPaciente({ nombre, email, genero }) {
   const { data, error } = await supabase.functions.invoke('invite-patient', {
     body: { nombre, email, genero },
   });
-  if (error) throw error;
+  if (error) throw new Error(await mensajeDeErrorFuncion(error));
   if (data?.error) throw new Error(data.error);
   return data;
 }
@@ -115,7 +131,7 @@ export async function eliminarPaciente(pacienteId) {
   const { data, error } = await supabase.functions.invoke('delete-patient', {
     body: { pacienteId },
   });
-  if (error) throw error;
+  if (error) throw new Error(await mensajeDeErrorFuncion(error));
   if (data?.error) throw new Error(data.error);
   return data;
 }

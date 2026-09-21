@@ -29,7 +29,8 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado, on
       setConfirmInvitar(false);
     } catch (err) {
       console.error(err);
-      window.alert('No se pudo invitar al paciente. Revisá que el email no esté ya usado y probá de nuevo.');
+      const detalle = err?.message ? `\n\nDetalle: ${err.message}` : '';
+      window.alert('No se pudo invitar al paciente. Revisá que el email no esté ya usado y probá de nuevo.' + detalle);
     } finally {
       setInvitando(false);
     }
