@@ -123,6 +123,19 @@ export async function invitarPaciente({ nombre, email, genero }) {
   return data;
 }
 
+// Da de alta al paciente directo, sin mandar ningún mail: genera una
+// contraseña temporal y la devuelve para que Florencia se la pase al
+// paciente por el medio que prefiera (WhatsApp, en persona, etc). El
+// paciente entra con su email + esa contraseña.
+export async function crearPacienteConClave({ nombre, email, genero }) {
+  const { data, error } = await supabase.functions.invoke('create-patient', {
+    body: { nombre, email, genero },
+  });
+  if (error) throw new Error(await mensajeDeErrorFuncion(error));
+  if (data?.error) throw new Error(data.error);
+  return data; // { ok, user, password }
+}
+
 // Borra al paciente por completo: su usuario de Supabase Auth y, en cascada,
 // su ficha y sus turnos. Pensado para que Florencia (que no tiene acceso al
 // panel de Supabase) pueda deshacer una invitación o un alta mal hecha desde

@@ -9,7 +9,7 @@ import GestionAccesos from './components/GestionAccesos.jsx';
 import { supabase } from './lib/supabaseClient.js';
 import {
   checkIsStaff, fetchAllPacientes, fetchOwnPaciente,
-  persistPaciente, addTurno, deleteTurno, invitarPaciente, eliminarPaciente,
+  persistPaciente, addTurno, deleteTurno, crearPacienteConClave, eliminarPaciente,
 } from './lib/api.js';
 
 // Si venimos del link del mail (invitación o recuperación de contraseña),
@@ -115,9 +115,10 @@ export default function App() {
   }
 
   async function addPatient({ nombre, email, genero }) {
-    await invitarPaciente({ nombre, email, genero });
+    const { password } = await crearPacienteConClave({ nombre, email, genero });
     const dict = await fetchAllPacientes();
     setPatients(dict);
+    return password;
   }
 
   function toggleEstado(key) {

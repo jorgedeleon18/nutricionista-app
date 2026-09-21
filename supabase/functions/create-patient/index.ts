@@ -1,16 +1,15 @@
-// Edge Function: invite-patient
-// La invitación de un paciente nuevo necesita la service_role key de Supabase
-// (para poder mandar el mail de invitación en nombre de Florencia), y esa key
-// NUNCA debe viajar al navegador. Por eso esto corre server-side, en Supabase.
+// Edge Function: create-patient
+// Alternativa a invite-patient que NO manda ningún mail. Crea al paciente
+// directo en Supabase Auth con una contraseña temporal generada acá mismo,
+// y se la devuelve a Florencia para que se la pase al paciente por el medio
+// que quiera (WhatsApp, en persona, etc). El paciente entra con su email y
+// esa contraseña, y puede cambiarla después si quiere desde su cuenta.
 //
-// Se despliega una sola vez con:
-//   supabase functions deploy invite-patient
+// Se despliega con:
+//   supabase functions deploy create-patient
 //
-// El frontend la llama así (ver src/lib/supabaseClient.js):
-//   supabase.functions.invoke('invite-patient', { body: { nombre, email, genero } })
-//
-// Supabase inyecta automáticamente las variables de entorno SUPABASE_URL y
-// SUPABASE_SERVICE_ROLE_KEY en toda Edge Function — no hay que configurar nada.
+// El frontend la llama así (ver src/lib/api.js):
+//   supabase.functions.invoke('create-patient', { body: { nombre, email, genero } })
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -26,6 +25,12 @@ function iniciales(nombre) {
   return (first + last).toUpperCase();
 }
 
+// Contraseña temporal fácil de dictar/escribir: "Nutri" + 4 dígitos.
+function generarPassword() {
+  const numero = Math.floor(1000 + Math.random() * 9000);
+  return `Nutri${numero}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -37,13 +42,12 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     );
 
-    // Solo Florencia (staff) puede invitar pacientes: verificamos el token
-    // que mandó el frontend antes de hacer nada.
+    // Solo Florencia (staff) puede dar de alta pacientes.
     const authHeader = req.headers.get('Authorization') || '';
     const jwt = authHeader.replace('Bearer ', '');
     const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
     if (userErr || !userData?.user) {
-      console.error('[invite-patient] getUser falló:', userErr);
+      console.error('[create-patient] getUser falló:', userErr);
       return new Response(JSON.stringify({ error: 'No autenticado' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -65,32 +69,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // inviteUserByEmail manda el mail de invitación; el paciente entra desde ese
-    // link y ahí mismo elige su propia contraseña (ver /src/components/ y el
-    // flujo de "recovery" en supabaseClient.js).
-    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: {
+    const password = generarPassword();
+
+    // email_confirm: true = el usuario queda confirmado de entrada, sin
+    // necesidad de que haga clic en ningún link de mail.
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
         role: 'paciente',
         nombre,
         genero: genero || 'F',
         iniciales: iniciales(nombre),
       },
-      redirectTo: Deno.env.get('SITE_URL') ? `${Deno.env.get('SITE_URL')}/confirmar` : undefined,
     });
 
     if (error) {
-      console.error('[invite-patient] inviteUserByEmail falló:', error.status, error.message);
+      console.error('[create-patient] createUser falló:', error.status, error.message);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, user: data.user }), {
+    return new Response(JSON.stringify({ ok: true, user: data.user, password }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error('[invite-patient] error inesperado:', e);
+    console.error('[create-patient] error inesperado:', e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
