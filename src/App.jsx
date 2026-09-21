@@ -32,7 +32,7 @@ export default function App() {
         <Header
           subtitle="Vista paciente"
           onLogout={handleLogout}
-          onBack={() => setPatientView('hoy')}
+          onBack={patientView !== 'hoy' ? () => setPatientView('hoy') : undefined}
         />
         <PatientDashboard view={patientView} onChangeView={setPatientView} />
       </>
@@ -44,7 +44,7 @@ export default function App() {
       <Header
         subtitle="Vista nutricionista"
         onLogout={handleLogout}
-        onBack={() => setOpenPatient(null)}
+        onBack={openPatient ? () => setOpenPatient(null) : undefined}
       />
       {openPatient ? (
         <PatientDetail patientKey={openPatient} />
