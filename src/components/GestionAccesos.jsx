@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { avatarColor, ESTADO_LABEL } from '../data/patients.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
-export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) {
+export default function GestionAccesos({ patients, onInvitar, onToggleEstado, onEliminar }) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [genero, setGenero] = useState('F');
   const [reenviado, setReenviado] = useState(null);
   const [confirmInvitar, setConfirmInvitar] = useState(false);
   const [confirmEstado, setConfirmEstado] = useState(null); // { key, name, next }
+  const [confirmEliminar, setConfirmEliminar] = useState(null); // { key, name }
   const [invitando, setInvitando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
   function handleInvitar(e) {
     e.preventDefault();
@@ -40,6 +42,24 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
   function confirmarEstado() {
     if (confirmEstado) onToggleEstado(confirmEstado.key);
     setConfirmEstado(null);
+  }
+
+  function pedirEliminar(key, a) {
+    setConfirmEliminar({ key, name: a.name });
+  }
+
+  async function confirmarEliminar() {
+    if (!confirmEliminar) return;
+    setEliminando(true);
+    try {
+      await onEliminar(confirmEliminar.key);
+      setConfirmEliminar(null);
+    } catch (err) {
+      console.error(err);
+      window.alert('No se pudo eliminar al paciente. Probá de nuevo.');
+    } finally {
+      setEliminando(false);
+    }
   }
 
   function reenviar(key) {
@@ -137,6 +157,9 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
                         {a.acceso === 'activo' ? 'Dar de baja' : 'Reactivar'}
                       </button>
                     )}
+                    <button className="btn-sm danger" onClick={() => pedirEliminar(key, a)}>
+                      Eliminar
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -166,6 +189,16 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
         danger={confirmEstado?.next === 'inactivo'}
         onConfirm={confirmarEstado}
         onCancel={() => setConfirmEstado(null)}
+      />
+
+      <ConfirmDialog
+        open={!!confirmEliminar}
+        title="¿Eliminar a este paciente?"
+        message={`Esto borra a ${confirmEliminar?.name} por completo: su acceso, su ficha, su plan, sus mediciones y sus turnos. No se puede deshacer.`}
+        confirmLabel={eliminando ? 'Eliminando…' : 'Sí, eliminar'}
+        danger
+        onConfirm={confirmarEliminar}
+        onCancel={() => setConfirmEliminar(null)}
       />
     </div>
   );

@@ -9,7 +9,7 @@ import GestionAccesos from './components/GestionAccesos.jsx';
 import { supabase } from './lib/supabaseClient.js';
 import {
   checkIsStaff, fetchAllPacientes, fetchOwnPaciente,
-  persistPaciente, addTurno, deleteTurno, invitarPaciente,
+  persistPaciente, addTurno, deleteTurno, invitarPaciente, eliminarPaciente,
 } from './lib/api.js';
 
 // Si venimos del link del mail (invitación o recuperación de contraseña),
@@ -124,6 +124,15 @@ export default function App() {
     updatePatient(key, (prev) => ({ acceso: prev.acceso === 'inactivo' ? 'activo' : 'inactivo' }));
   }
 
+  async function handleEliminarPaciente(key) {
+    await eliminarPaciente(key);
+    setPatients((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
   async function handleAddTurno(key, turno) {
     try {
       await addTurno(key, turno);
@@ -211,7 +220,12 @@ export default function App() {
         }
       />
       {showAccesos ? (
-        <GestionAccesos patients={patients} onInvitar={addPatient} onToggleEstado={toggleEstado} />
+        <GestionAccesos
+          patients={patients}
+          onInvitar={addPatient}
+          onToggleEstado={toggleEstado}
+          onEliminar={handleEliminarPaciente}
+        />
       ) : openPatient ? (
         <PatientDetail
           patientKey={openPatient}

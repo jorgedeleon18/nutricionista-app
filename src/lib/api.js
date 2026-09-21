@@ -103,3 +103,16 @@ export async function invitarPaciente({ nombre, email, genero }) {
   if (data?.error) throw new Error(data.error);
   return data;
 }
+
+// Borra al paciente por completo: su usuario de Supabase Auth y, en cascada,
+// su ficha y sus turnos. Pensado para que Florencia (que no tiene acceso al
+// panel de Supabase) pueda deshacer una invitación o un alta mal hecha desde
+// la propia app.
+export async function eliminarPaciente(pacienteId) {
+  const { data, error } = await supabase.functions.invoke('delete-patient', {
+    body: { pacienteId },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
