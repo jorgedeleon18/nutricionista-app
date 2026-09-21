@@ -233,7 +233,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
         ))}
         <button
           type="button"
-          className="tab tab-turno"
+          className={'tab tab-turno' + (addingTurno ? ' active' : '')}
           onClick={() => {
             setTab('calendario');
             setAddingTurno(true);
