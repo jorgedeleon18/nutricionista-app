@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { PATIENTS, statusOf } from '../data/patients.js';
 
-export default function Mosaico({ onOpenPatient }) {
+export default function Mosaico({ onOpenPatient, onOpenAccesos }) {
   const [query, setQuery] = useState('');
   const entries = useMemo(() => Object.entries(PATIENTS), []);
   const filtered = entries.filter(([, p]) => p.name.toLowerCase().includes(query.toLowerCase()));
@@ -13,6 +13,9 @@ export default function Mosaico({ onOpenPatient }) {
           <h1>Hola, <span style={{ color: 'var(--pink)' }}>Florencia</span></h1>
           <p className="sub">{entries.length} pacientes activos hoy</p>
         </div>
+        <button className="pill-btn" onClick={onOpenAccesos}>
+          <span className="ic">👥</span> Gestionar accesos
+        </button>
       </div>
 
       <div className="searchbar">

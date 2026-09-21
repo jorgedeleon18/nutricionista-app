@@ -117,6 +117,13 @@ button, input, textarea{font-family:inherit;}
 .meal-txt{font-size:14px; line-height:1.5; color:var(--ink); font-weight:500;}
 .meal.empty{border-style:dashed;}
 .meal.empty .meal-txt{color:var(--muted); font-style:italic;}
+.meal-edit{
+  width:100%; min-height:74px; border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+  font-size:14px; line-height:1.5; font-family:inherit; color:var(--ink); font-weight:500; resize:vertical; outline:none;
+  background:var(--bg);
+}
+.meal-edit:focus{border-color:var(--pink);}
+.edit-hint{font-size:12px; color:var(--muted); font-weight:700; margin:-8px 0 16px;}
 
 .clinica-box, .medidas-box{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; box-shadow:var(--shadow);}
 .clinica-box .badge{display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:var(--pink2); background:var(--pink-soft); padding:4px 10px; border-radius:999px; margin-bottom:14px;}
@@ -180,6 +187,39 @@ textarea.box:focus{border-color:var(--pink);}
   background:var(--pink); color:#fff; font-weight:800; font-size:12.5px;
 }
 
+/* ---------- GESTIÓN DE ACCESOS ---------- */
+.accesos-top{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;}
+.accesos-top h1{font-size:26px; margin:0;}
+.accesos-note{
+  background:var(--pink-soft); color:var(--pink2); border-radius:14px; padding:13px 16px;
+  font-size:12.5px; font-weight:700; line-height:1.55; margin-bottom:22px;
+}
+.invite-form{
+  display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; background:var(--card); border:1px solid var(--border);
+  border-radius:18px; padding:18px 20px; margin-bottom:24px; box-shadow:var(--shadow);
+}
+.invite-form .field{margin:0; flex:1; min-width:200px;}
+.invite-form button{flex-shrink:0;}
+
+.accesos-box{overflow-x:auto; background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow);}
+table.accesos-table{width:100%; min-width:560px; border-collapse:collapse; font-size:13.5px;}
+table.accesos-table th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); padding:14px 16px; border-bottom:2px solid var(--border);}
+table.accesos-table td{padding:13px 16px; border-bottom:1px solid var(--border); vertical-align:middle;}
+table.accesos-table tr:last-child td{border-bottom:none;}
+
+.estado-badge{
+  display:inline-flex; align-items:center; font-size:10.5px; font-weight:800; padding:5px 12px; border-radius:999px;
+  text-transform:uppercase; letter-spacing:0.03em; white-space:nowrap;
+}
+.estado-badge.activo{background:var(--green-soft); color:var(--green2);}
+.estado-badge.invitado{background:var(--amber-soft); color:var(--amber);}
+.estado-badge.inactivo{background:#EFE7EA; color:var(--muted);}
+
+.row-actions{display:flex; gap:8px; flex-wrap:wrap;}
+.btn-sm{padding:8px 14px; border-radius:10px; border:1px solid var(--border); background:var(--bg); font-weight:800; font-size:11.5px; color:var(--ink); cursor:pointer;}
+.btn-sm:hover{border-color:var(--pink); background:var(--pink-soft);}
+.btn-sm.danger:hover{border-color:#C8466A; color:#C8466A;}
+
 @media (max-width: 900px){
   .cal-layout{flex-direction:column;}
   .cal-left{width:100%; border-right:none; border-bottom:1px solid var(--border);}
@@ -233,4 +273,9 @@ textarea.box:focus{border-color:var(--pink);}
   .progress{max-width:100%;}
 
   table.medidas-table{font-size:12.5px;}
+
+  .accesos-top h1{font-size:21px;}
+  .invite-form{flex-direction:column; align-items:stretch; padding:16px;}
+  .invite-form button{width:100%;}
+  table.accesos-table{font-size:12.5px;}
 }

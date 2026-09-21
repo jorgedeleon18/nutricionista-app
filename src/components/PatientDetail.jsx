@@ -41,6 +41,7 @@ export default function PatientDetail({ patientKey }) {
   const [dayIndex, setDayIndex] = useState(2); // miércoles 27
   const [calDay, setCalDay] = useState(27);
   const [clinica, setClinica] = useState(patient.historiaClinica);
+  const [plan, setPlan] = useState(patient.plan);
 
   const reg = registroDelDia(patient, dayIndex);
   const calReg = registroDelDia(patient, DET_DATES.indexOf(calDay) >= 0 ? DET_DATES.indexOf(calDay) : 2);
@@ -65,14 +66,22 @@ export default function PatientDetail({ patientKey }) {
       </div>
 
       {tab === 'plan' && (
-        <div className="meal-grid">
-          {MEAL_ORDER.map((k) => (
-            <div key={k} className="meal">
-              <div className="meal-top"><span className="meal-name">{MEAL_LABELS[k]}</span></div>
-              <div className="meal-txt">{patient.plan[k]}</div>
-            </div>
-          ))}
-        </div>
+        <>
+          <p className="edit-hint">Podés editar el plan de cada comida — el paciente ve estos cambios en su vista.</p>
+          <div className="meal-grid">
+            {MEAL_ORDER.map((k) => (
+              <div key={k} className="meal">
+                <div className="meal-top"><span className="meal-name">{MEAL_LABELS[k]}</span></div>
+                <textarea
+                  className="meal-edit"
+                  rows={3}
+                  value={plan[k]}
+                  onChange={(e) => setPlan((p) => ({ ...p, [k]: e.target.value }))}
+                />
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {tab === 'registro' && (
