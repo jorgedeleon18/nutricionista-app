@@ -99,7 +99,13 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
             <button
               className="turno-chip turno-chip-btn"
               style={{ width: '100%', marginBottom: 20 }}
-              onClick={() => { setCalFecha(proximoTurno.fecha); onChangeView('calendario'); }}
+              onClick={() => {
+                const [y, m] = proximoTurno.fecha.split('-').map(Number);
+                setCalYear(y);
+                setCalMonth(m - 1);
+                setCalFecha(proximoTurno.fecha);
+                onChangeView('calendario');
+              }}
             >
               <span className="ic">📅</span>
               <div>
