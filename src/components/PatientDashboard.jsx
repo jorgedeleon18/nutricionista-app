@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  MEAL_ORDER, MEAL_LABELS, registroDelDia, statusForDay,
+  MEAL_ORDER, MEAL_LABELS, registroDelDia, statusForDay, fechaKey,
 } from '../data/patients.js';
 
 const ICONS = { desayuno: '☀️', colacion: '🍎', almuerzo: '🍽️', merienda: '🍪', cena: '🌙' };
@@ -20,6 +20,9 @@ export default function PatientDashboard({ view, onChangeView, patient }) {
   }
 
   const calReg = registroDelDia(patient, 2);
+  const turnos = patient.turnos || [];
+  const calFecha = fechaKey(2026, 7, calDay);
+  const turnoDelDia = turnos.find((t) => t.fecha === calFecha);
 
   return (
     <div className="page">
@@ -76,20 +79,37 @@ export default function PatientDashboard({ view, onChangeView, patient }) {
             <div className="monthbar"><span className="navbtn">‹</span><b>Agosto 2026</b><span className="navbtn">›</span></div>
             <div className="dow">{['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i}>{d}</span>)}</div>
             <div className="calgrid">
-              {[23, 24, 25, 26, 27].map((d) => (
-                <div key={d} className={'cell' + (d === 27 ? ' today' : '') + (d === calDay ? ' sel' : '')} onClick={() => setCalDay(d)}>
-                  <span>{d}</span><span className={'dot ' + statusForDay(patient, d)}></span>
-                </div>
-              ))}
+              {[23, 24, 25, 26, 27].map((d) => {
+                const hasTurno = turnos.some((t) => t.fecha === fechaKey(2026, 7, d));
+                return (
+                  <div
+                    key={d}
+                    className={'cell' + (d === 27 ? ' today' : '') + (d === calDay ? ' sel' : '') + (hasTurno ? ' turno' : '')}
+                    onClick={() => setCalDay(d)}
+                  >
+                    <span>{d}</span><span className={'dot ' + statusForDay(patient, d)}></span>
+                  </div>
+                );
+              })}
             </div>
             <div className="legend">
               <span><span className="dot g"></span>Completo</span>
               <span><span className="dot a"></span>Parcial</span>
               <span><span className="dot m"></span>Sin registrar</span>
+              <span><span className="dot-ring"></span>Turno</span>
             </div>
           </div>
           <div className="cal-right">
             <h4>{calDay} de agosto{calDay === 27 ? ' (hoy)' : ''}</h4>
+            {turnoDelDia && (
+              <div className="turno-chip">
+                <span className="ic">📅</span>
+                <div>
+                  <b>Turno {turnoDelDia.hora}</b>
+                  <span>{turnoDelDia.motivo || 'Sin motivo especificado'}</span>
+                </div>
+              </div>
+            )}
             {MEAL_ORDER.filter((k) => calReg[k]).map((k) => (
               <div key={k} className="row2"><span className="tag">{MEAL_LABELS[k]}</span><span className="txt">{calReg[k].txt}</span></div>
             ))}

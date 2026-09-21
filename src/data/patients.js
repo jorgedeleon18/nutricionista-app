@@ -15,6 +15,23 @@ export const DET_DAY_LABELS = {
 };
 export const DAY_LETTERS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
+// "Hoy" en la maqueta es siempre miércoles 27 de agosto de 2026.
+export const TODAY = { year: 2026, month: 7, day: 27 }; // month: 0 = enero
+export const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+export function fechaKey(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+export function daysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate();
+}
+export function firstWeekdayMonday(year, month) {
+  return (new Date(year, month, 1).getDay() + 6) % 7;
+}
+
 // Mediciones corporales: cargadas por consulta, visibles para la nutricionista y el paciente.
 const measurementSeries = (base) => ([
   { fecha: '2026-07-02', peso: base.peso + 2.4, cintura: base.cintura + 3, notas: 'Primera consulta' },
@@ -54,6 +71,10 @@ export const PATIENTS = {
       'Sin patologías de base declaradas. Objetivo: bajar de peso de forma sostenida, buena adherencia. ' +
       'Refiere horarios laborales cambiantes que a veces complican el almuerzo. Se ajustó plan para incluir opciones rápidas.'
     ),
+    turnos: [
+      { fecha: '2026-08-29', hora: '16:00', motivo: 'Control de peso' },
+      { fecha: '2026-09-10', hora: '11:00', motivo: 'Consulta de seguimiento' },
+    ],
   },
   martina: {
     name: 'Martina Ruiz', initials: 'MR', genero: 'F',
@@ -257,6 +278,7 @@ export function blankPatient({ nombre, email, genero }) {
     history: {},
     medidas: [],
     historiaClinica: '',
+    turnos: [],
     acceso: 'invitado',
   };
 }
