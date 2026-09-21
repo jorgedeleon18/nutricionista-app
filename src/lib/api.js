@@ -78,14 +78,19 @@ export async function persistPaciente(id, partial) {
 }
 
 export async function addTurno(pacienteId, turno) {
-  const { error } = await supabase.from('turnos').insert({
-    paciente_id: pacienteId,
-    fecha: turno.fecha,
-    hora: turno.hora,
-    motivo: turno.motivo || '',
-    avisar: turno.avisar ?? true,
-  });
+  const { data, error } = await supabase
+    .from('turnos')
+    .insert({
+      paciente_id: pacienteId,
+      fecha: turno.fecha,
+      hora: turno.hora,
+      motivo: turno.motivo || '',
+      avisar: turno.avisar ?? true,
+    })
+    .select()
+    .single();
   if (error) throw error;
+  return data; // incluye el id generado, para poder editar el turno al toque
 }
 
 export async function deleteTurno(pacienteId, fecha, hora) {
@@ -95,6 +100,14 @@ export async function deleteTurno(pacienteId, fecha, hora) {
     .eq('paciente_id', pacienteId)
     .eq('fecha', fecha)
     .eq('hora', hora);
+  if (error) throw error;
+}
+
+export async function updateTurno(turnoId, { fecha, hora, motivo }) {
+  const { error } = await supabase
+    .from('turnos')
+    .update({ fecha, hora, motivo: motivo || '' })
+    .eq('id', turnoId);
   if (error) throw error;
 }
 

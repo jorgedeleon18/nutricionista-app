@@ -275,6 +275,12 @@ table.medidas-table tr:last-child td{font-weight:800; background:var(--green-sof
   background:none; color:var(--muted); font-size:15px; line-height:1; cursor:pointer;
 }
 .turno-cancel:hover{background:var(--pink-soft); color:var(--pink2);}
+.turno-edit{
+  position:absolute; top:6px; right:30px; width:20px; height:20px; border-radius:50%; border:none;
+  background:none; color:var(--muted); font-size:11px; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.turno-edit:hover{background:var(--turno-soft); color:var(--turno);}
 .turno-empty{font-size:12.5px; color:var(--muted); font-style:italic;}
 .row2{display:flex; gap:12px; margin-bottom:12px; align-items:flex-start;}
 .row2 .tag{font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:var(--green); width:74px; flex-shrink:0; padding-top:2px;}

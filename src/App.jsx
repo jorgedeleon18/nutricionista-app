@@ -9,7 +9,7 @@ import GestionAccesos from './components/GestionAccesos.jsx';
 import { supabase } from './lib/supabaseClient.js';
 import {
   checkIsStaff, fetchAllPacientes, fetchOwnPaciente,
-  persistPaciente, addTurno, deleteTurno, crearPacienteConClave, eliminarPaciente,
+  persistPaciente, addTurno, deleteTurno, updateTurno, crearPacienteConClave, eliminarPaciente,
 } from './lib/api.js';
 
 // Si venimos del link del mail (invitación o recuperación de contraseña),
@@ -136,16 +136,34 @@ export default function App() {
 
   async function handleAddTurno(key, turno) {
     try {
-      await addTurno(key, turno);
+      const fila = await addTurno(key, turno);
+      const nuevo = { id: fila.id, fecha: fila.fecha, hora: (fila.hora || '').slice(0, 5), motivo: fila.motivo || '', avisar: fila.avisar };
       setPatients((prev) => {
         const cur = prev[key];
         if (!cur) return prev;
-        const turnos = [...(cur.turnos || []), turno].sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+        const turnos = [...(cur.turnos || []), nuevo].sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
         return { ...prev, [key]: { ...cur, turnos } };
       });
     } catch (err) {
       console.error(err);
       window.alert('No se pudo guardar el turno. Probá de nuevo.');
+    }
+  }
+
+  async function handleUpdateTurno(key, turnoId, cambios) {
+    try {
+      await updateTurno(turnoId, cambios);
+      setPatients((prev) => {
+        const cur = prev[key];
+        if (!cur) return prev;
+        const turnos = (cur.turnos || [])
+          .map((t) => (t.id === turnoId ? { ...t, ...cambios } : t))
+          .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+        return { ...prev, [key]: { ...cur, turnos } };
+      });
+    } catch (err) {
+      console.error(err);
+      window.alert('No se pudo modificar el turno. Probá de nuevo.');
     }
   }
 
@@ -233,6 +251,7 @@ export default function App() {
           patients={patients}
           onUpdatePatient={updatePatient}
           onAddTurno={handleAddTurno}
+          onUpdateTurno={handleUpdateTurno}
           onCancelTurno={handleCancelTurno}
         />
       ) : (

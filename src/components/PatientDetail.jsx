@@ -66,7 +66,7 @@ function inicialesDe(nombre) {
   return (first + last).toUpperCase();
 }
 
-export default function PatientDetail({ patientKey, patients, onUpdatePatient, onAddTurno, onCancelTurno }) {
+export default function PatientDetail({ patientKey, patients, onUpdatePatient, onAddTurno, onUpdateTurno, onCancelTurno }) {
   const patient = patients[patientKey];
   const [tab, setTab] = useState('registro');
   const [dayIndex, setDayIndex] = useState(2); // miércoles 27
@@ -83,6 +83,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
   const [nuevoTurno, setNuevoTurno] = useState(TURNO_VACIO);
   const [confirmTurno, setConfirmTurno] = useState(false);
   const [confirmCancelTurno, setConfirmCancelTurno] = useState(null);
+  const [editingTurnoId, setEditingTurnoId] = useState(null);
   const [editandoDatos, setEditandoDatos] = useState(false);
   const [nombreEdit, setNombreEdit] = useState(patient.name);
   const [generoEdit, setGeneroEdit] = useState(patient.genero);
@@ -138,13 +139,18 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
   }
 
   function confirmarAgregarTurno() {
-    const nuevo = { fecha: nuevoTurno.fecha, hora: nuevoTurno.hora, motivo: nuevoTurno.motivo, avisar: nuevoTurno.avisar };
-    onAddTurno(patientKey, nuevo);
+    const datos = { fecha: nuevoTurno.fecha, hora: nuevoTurno.hora, motivo: nuevoTurno.motivo, avisar: nuevoTurno.avisar };
+    if (editingTurnoId) {
+      onUpdateTurno(patientKey, editingTurnoId, datos);
+    } else {
+      onAddTurno(patientKey, datos);
+    }
     const [y, m] = nuevoTurno.fecha.split('-').map(Number);
     setCalYear(y);
     setCalMonth(m - 1);
     setCalFecha(nuevoTurno.fecha);
     setNuevoTurno(TURNO_VACIO);
+    setEditingTurnoId(null);
     setAddingTurno(false);
     setConfirmTurno(false);
   }
@@ -153,8 +159,26 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
   // que esté seleccionado en el calendario en ese momento (o el de hoy),
   // así no hay que volver a tipearla a mano.
   function abrirNuevoTurno() {
-    setNuevoTurno((t) => ({ ...t, fecha: calFecha }));
+    setEditingTurnoId(null);
+    setNuevoTurno((t) => ({ ...TURNO_VACIO, fecha: calFecha }));
     setAddingTurno(true);
+  }
+
+  // Editar un turno existente: precarga el formulario con sus datos.
+  function abrirEditarTurno(t) {
+    setEditingTurnoId(t.id);
+    setNuevoTurno({ fecha: t.fecha, hora: t.hora, motivo: t.motivo || '', avisar: t.avisar ?? true });
+    const [y, m] = t.fecha.split('-').map(Number);
+    setCalYear(y);
+    setCalMonth(m - 1);
+    setCalFecha(t.fecha);
+    setAddingTurno(true);
+  }
+
+  function cancelarFormularioTurno() {
+    setAddingTurno(false);
+    setEditingTurnoId(null);
+    setNuevoTurno(TURNO_VACIO);
   }
 
   function abrirEdicionDatos() {
@@ -330,6 +354,9 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
               </div>
               {addingTurno ? (
                 <form className="turno-form" onSubmit={handleAgregarTurno}>
+                  <p className="edit-hint" style={{ margin: 0 }}>
+                    {editingTurnoId ? 'Editando turno' : 'Turno nuevo'}
+                  </p>
                   <div className="field">
                     <label>Fecha</label>
                     <input
@@ -358,9 +385,9 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
                   </div>
                   <div className="row-actions">
                     <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '11px 18px' }}>
-                      Guardar turno
+                      {editingTurnoId ? 'Guardar cambios' : 'Guardar turno'}
                     </button>
-                    <button type="button" className="btn-sm" onClick={() => { setAddingTurno(false); setNuevoTurno(TURNO_VACIO); }}>
+                    <button type="button" className="btn-sm" onClick={cancelarFormularioTurno}>
                       Cancelar
                     </button>
                   </div>
@@ -383,6 +410,14 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
                     <b>Turno {turnoDelDia.hora}</b>
                     <span>{turnoDelDia.motivo || 'Sin motivo especificado'}</span>
                   </div>
+                  <button
+                    type="button"
+                    className="btn-sm"
+                    style={{ marginLeft: 'auto', background: 'transparent' }}
+                    onClick={() => abrirEditarTurno(turnoDelDia)}
+                  >
+                    ✎ Editar
+                  </button>
                 </div>
               )}
               {calHasData ? (
@@ -416,6 +451,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
                           {t.fecha === HOY_KEY ? 'Hoy' : d.toLocaleDateString('es-AR', { weekday: 'long' })}
                         </span>
                       </div>
+                      <button className="turno-edit" title="Editar turno" onClick={() => abrirEditarTurno(t)}>✎</button>
                       <button className="turno-cancel" title="Cancelar turno" onClick={() => pedirCancelarTurno(t)}>×</button>
                     </div>
                   );
@@ -529,13 +565,13 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
 
       <ConfirmDialog
         open={confirmTurno}
-        title="¿Confirmar el turno?"
+        title={editingTurnoId ? '¿Guardar los cambios del turno?' : '¿Confirmar el turno?'}
         message={
           nuevoTurno.fecha
             ? `Turno para ${patient.name} el ${new Date(nuevoTurno.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} a las ${nuevoTurno.hora}. Va a verlo apenas entre a la app.`
             : ''
         }
-        confirmLabel="Sí, guardar turno"
+        confirmLabel={editingTurnoId ? 'Sí, guardar cambios' : 'Sí, guardar turno'}
         onConfirm={confirmarAgregarTurno}
         onCancel={() => setConfirmTurno(false)}
       />
