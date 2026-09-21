@@ -6,7 +6,7 @@ import {
 
 const HOY_KEY = fechaKey(TODAY.year, TODAY.month, TODAY.day);
 
-function buildMiniCalendarCells({ year, month, turnos }) {
+function buildMiniCalendarCells({ year, month, turnos, selectedFecha, onSelect }) {
   const isCurrentMonth = year === TODAY.year && month === TODAY.month;
   const total = daysInMonth(year, month);
   const firstDay = firstWeekdayMonday(year, month);
@@ -17,9 +17,12 @@ function buildMiniCalendarCells({ year, month, turnos }) {
     const isToday = isCurrentMonth && d === TODAY.day;
     const hasTurno = turnos.some((t) => t.fecha === fecha);
     cells.push(
-      <div key={fecha} className={'cell home' + (isToday ? ' today' : '') + (hasTurno ? ' turno' : '')}>
+      <div
+        key={fecha}
+        className={'cell home' + (isToday ? ' today' : '') + (hasTurno ? ' turno' : '') + (fecha === selectedFecha ? ' sel' : '')}
+        onClick={() => onSelect(fecha)}
+      >
         <span>{d}</span>
-        {hasTurno ? <span className="dot-ring"></span> : <span className="dot-spacer"></span>}
       </div>
     );
   }
@@ -30,6 +33,7 @@ export default function Mosaico({ patients, onOpenPatient, onOpenAccesos }) {
   const [query, setQuery] = useState('');
   const [calYear, setCalYear] = useState(TODAY.year);
   const [calMonth, setCalMonth] = useState(TODAY.month);
+  const [selectedFecha, setSelectedFecha] = useState(HOY_KEY);
 
   const entries = useMemo(() => Object.entries(patients), [patients]);
   const filtered = entries.filter(([, p]) => p.name.toLowerCase().includes(query.toLowerCase()));
@@ -45,6 +49,11 @@ export default function Mosaico({ patients, onOpenPatient, onOpenAccesos }) {
   const proximosTurnos = useMemo(
     () => allTurnos.filter((t) => t.fecha >= HOY_KEY).slice(0, 6),
     [allTurnos]
+  );
+
+  const turnosDelDiaSeleccionado = useMemo(
+    () => allTurnos.filter((t) => t.fecha === selectedFecha),
+    [allTurnos, selectedFecha]
   );
 
   function prevMonth() {
@@ -113,12 +122,32 @@ export default function Mosaico({ patients, onOpenPatient, onOpenAccesos }) {
               {DAY_LETTERS.map((d, i) => <span key={i}>{d}</span>)}
             </div>
             <div className="calgrid">
-              {buildMiniCalendarCells({ year: calYear, month: calMonth, turnos: allTurnos })}
+              {buildMiniCalendarCells({
+                year: calYear, month: calMonth, turnos: allTurnos,
+                selectedFecha, onSelect: setSelectedFecha,
+              })}
             </div>
-            <p className="cal-hint">
-              <span className="dot-ring"></span> Así marcamos los días con turno agendado. Usá las flechas para
-              recorrer los próximos meses.
-            </p>
+            <div className="cal-legend-mini">
+              <span><span className="swatch today"></span>Hoy</span>
+              <span><span className="swatch turno"></span>Turno</span>
+            </div>
+            {turnosDelDiaSeleccionado.length > 0 && (
+              <div className="cal-day-turnos">
+                {turnosDelDiaSeleccionado.map((t) => (
+                  <button
+                    key={t.patientKey + t.fecha + t.hora}
+                    className="turno-chip turno-chip-btn"
+                    onClick={() => onOpenPatient(t.patientKey)}
+                  >
+                    <span className="ic">📅</span>
+                    <div>
+                      <b>{t.hora} · {t.patientName}</b>
+                      <span>{t.motivo || 'Sin motivo especificado'}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="side-card">

@@ -91,7 +91,37 @@ button, input, textarea{font-family:inherit;}
 .cal-hint{display:flex; align-items:flex-start; gap:8px; font-size:11px; color:var(--muted); font-weight:600; line-height:1.5; margin:14px 0 0;}
 .cal-hint .dot-ring{margin-top:3px; flex-shrink:0;}
 .dot-spacer{width:9px; height:9px; flex-shrink:0;}
-.cell.home{cursor:default;}
+
+.cell.home{cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;}
+.cell.home:hover{transform:translateY(-1px);}
+.cell.home.today{background:var(--pink); color:#fff; border-color:transparent;}
+.cell.home.turno{
+  background:rgba(124,92,252,0.16);
+  -webkit-backdrop-filter:blur(10px) saturate(180%);
+  backdrop-filter:blur(10px) saturate(180%);
+  border:1px solid rgba(124,92,252,0.4);
+  color:var(--turno);
+  box-shadow:0 2px 10px rgba(124,92,252,0.14);
+}
+.cell.home.turno.today{
+  background:linear-gradient(135deg, var(--pink) 0%, var(--turno) 100%);
+  color:#fff; border-color:transparent;
+}
+.cell.home.sel{outline:2px solid var(--ink); outline-offset:1px;}
+
+.cal-legend-mini{display:flex; gap:14px; font-size:11px; color:var(--muted); font-weight:700; margin-top:14px;}
+.cal-legend-mini span{display:flex; align-items:center; gap:6px;}
+.cal-legend-mini .swatch{width:11px; height:11px; border-radius:4px; flex-shrink:0;}
+.cal-legend-mini .swatch.today{background:var(--pink);}
+.cal-legend-mini .swatch.turno{
+  background:rgba(124,92,252,0.35); border:1px solid rgba(124,92,252,0.55);
+}
+
+.cal-day-turnos{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
+.cal-day-turnos .turno-chip{margin-bottom:0;}
+.turno-chip-btn{border:none; width:100%; text-align:left; cursor:pointer; font:inherit;}
+.turno-chip-btn:hover{filter:brightness(0.96);}
+
 .turnos-list{display:flex; flex-direction:column; gap:10px;}
 .turno-card.home{
   width:100%; border:1px solid var(--border); cursor:pointer; font:inherit; color:inherit; text-align:left; min-width:0;
