@@ -5,18 +5,19 @@ import {
 
 const ICONS = { desayuno: '☀️', colacion: '🍎', almuerzo: '🍽️', merienda: '🍪', cena: '🌙' };
 
-export default function PatientDashboard({ view, onChangeView, patient }) {
+export default function PatientDashboard({ view, onChangeView, patient, onUpdatePatient }) {
   const primerNombre = patient.name.split(' ')[0];
   const [calDay, setCalDay] = useState(27);
   const [drafts, setDrafts] = useState({});
-  const [saved, setSaved] = useState({ ...patient.log });
 
+  const saved = patient.log || {};
   const filledCount = MEAL_ORDER.filter((k) => saved[k]).length;
 
   function saveMeal(k) {
     const txt = drafts[k];
     if (!txt) return;
-    setSaved((s) => ({ ...s, [k]: { txt, time: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) } }));
+    const time = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    onUpdatePatient((prev) => ({ log: { ...prev.log, [k]: { txt, time } } }));
   }
 
   const calReg = registroDelDia(patient, 2);

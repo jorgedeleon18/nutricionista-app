@@ -1,11 +1,27 @@
 import { useState } from 'react';
 
 export default function Login({ onLogin }) {
-  const [role, setRole] = useState('nutri');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    onLogin(role);
+    if (!email.trim() || !password) return;
+    setLoading(true);
+    setError('');
+    try {
+      await onLogin(email.trim(), password);
+    } catch (err) {
+      setError(
+        err?.message === 'Invalid login credentials'
+          ? 'Email o contraseña incorrectos.'
+          : 'No se pudo iniciar sesión. Probá de nuevo en un momento.'
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -17,29 +33,33 @@ export default function Login({ onLogin }) {
         <h1>Florencia Meccico</h1>
         <p className="sub">Asistente en nutrición</p>
 
-        <div className="role-segs">
-          <button type="button" className={'role-seg' + (role === 'nutri' ? ' active' : '')} onClick={() => setRole('nutri')}>
-            Nutricionista
-          </button>
-          <button type="button" className={'role-seg' + (role === 'paciente' ? ' active' : '')} onClick={() => setRole('paciente')}>
-            Paciente
-          </button>
-        </div>
-
         <div className="field">
           <label>Email</label>
-          <input type="text" defaultValue="florencia@nutricion.com" />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@email.com"
+            autoComplete="username"
+            required
+          />
         </div>
         <div className="field">
           <label>Contraseña</label>
-          <input type="password" defaultValue="12345678" />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
         </div>
 
-        <button type="submit" className="btn-primary">Ingresar</button>
-        <p className="login-note">
-          Esto es una demo: cualquier contraseña funciona.<br />
-          Elegí arriba con qué usuario querés entrar.
-        </p>
+        {error && <p className="login-error">{error}</p>}
+
+        <button type="submit" className="btn-primary" disabled={loading}>
+          {loading ? 'Ingresando…' : 'Ingresar'}
+        </button>
       </form>
     </div>
   );

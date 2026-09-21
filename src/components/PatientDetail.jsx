@@ -59,7 +59,7 @@ const MEDIDA_VACIA = { fecha: '', peso: '', cintura: '', notas: '' };
 const TURNO_VACIO = { fecha: '', hora: '', motivo: '', avisar: true };
 const HOY_KEY = fechaKey(TODAY.year, TODAY.month, TODAY.day);
 
-export default function PatientDetail({ patientKey, patients, onUpdatePatient }) {
+export default function PatientDetail({ patientKey, patients, onUpdatePatient, onAddTurno, onCancelTurno }) {
   const patient = patients[patientKey];
   const [tab, setTab] = useState('registro');
   const [dayIndex, setDayIndex] = useState(2); // miércoles 27
@@ -128,8 +128,8 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient })
   }
 
   function confirmarAgregarTurno() {
-    const nuevo = { fecha: nuevoTurno.fecha, hora: nuevoTurno.hora, motivo: nuevoTurno.motivo };
-    onUpdatePatient(patientKey, (prev) => ({ turnos: [...(prev.turnos || []), nuevo] }));
+    const nuevo = { fecha: nuevoTurno.fecha, hora: nuevoTurno.hora, motivo: nuevoTurno.motivo, avisar: nuevoTurno.avisar };
+    onAddTurno(patientKey, nuevo);
     const [y, m] = nuevoTurno.fecha.split('-').map(Number);
     setCalYear(y);
     setCalMonth(m - 1);
@@ -146,9 +146,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient })
   function confirmarCancelarTurno() {
     if (confirmCancelTurno) {
       const { fecha, hora } = confirmCancelTurno;
-      onUpdatePatient(patientKey, (prev) => ({
-        turnos: (prev.turnos || []).filter((t) => !(t.fecha === fecha && t.hora === hora)),
-      }));
+      onCancelTurno(patientKey, fecha, hora);
     }
     setConfirmCancelTurno(null);
   }

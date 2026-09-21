@@ -9,6 +9,7 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
   const [reenviado, setReenviado] = useState(null);
   const [confirmInvitar, setConfirmInvitar] = useState(false);
   const [confirmEstado, setConfirmEstado] = useState(null); // { key, name, next }
+  const [invitando, setInvitando] = useState(false);
 
   function handleInvitar(e) {
     e.preventDefault();
@@ -16,12 +17,20 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
     setConfirmInvitar(true);
   }
 
-  function confirmarInvitacion() {
-    onInvitar({ nombre: nombre.trim(), email: email.trim(), genero });
-    setNombre('');
-    setEmail('');
-    setGenero('F');
-    setConfirmInvitar(false);
+  async function confirmarInvitacion() {
+    setInvitando(true);
+    try {
+      await onInvitar({ nombre: nombre.trim(), email: email.trim(), genero });
+      setNombre('');
+      setEmail('');
+      setGenero('F');
+      setConfirmInvitar(false);
+    } catch (err) {
+      console.error(err);
+      window.alert('No se pudo invitar al paciente. Revisá que el email no esté ya usado y probá de nuevo.');
+    } finally {
+      setInvitando(false);
+    }
   }
 
   function pedirConfirmacionEstado(key, a) {
@@ -54,9 +63,8 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
       </div>
 
       <div className="accesos-note">
-        Esto todavía es una demo (mock): cuando lo conectemos con la base de datos, "Invitar paciente" le va a
-        mandar un mail real para que cree su propia contraseña y pueda entrar a la app. Un paciente nuevo arranca
-        con el plan y las mediciones vacías, listos para que los cargues desde su ficha.
+        "Invitar paciente" le manda un mail real para que cree su propia contraseña y pueda entrar a la app.
+        Un paciente nuevo arranca con el plan y las mediciones vacías, listos para que los cargues desde su ficha.
       </div>
 
       <form className="invite-form" onSubmit={handleInvitar}>
@@ -141,7 +149,7 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) 
         open={confirmInvitar}
         title="¿Invitar a este paciente?"
         message={`Le vamos a dar acceso a ${nombre.trim() || 'este paciente'} con el email ${email.trim()}. Va a arrancar con el plan y las mediciones vacías.`}
-        confirmLabel="Sí, invitar"
+        confirmLabel={invitando ? 'Invitando…' : 'Sí, invitar'}
         onConfirm={confirmarInvitacion}
         onCancel={() => setConfirmInvitar(false)}
       />
