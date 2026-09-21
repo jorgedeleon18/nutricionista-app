@@ -149,6 +149,14 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
     setConfirmTurno(false);
   }
 
+  // Al abrir el formulario de turno nuevo, precargamos la fecha con el día
+  // que esté seleccionado en el calendario en ese momento (o el de hoy),
+  // así no hay que volver a tipearla a mano.
+  function abrirNuevoTurno() {
+    setNuevoTurno((t) => ({ ...t, fecha: calFecha }));
+    setAddingTurno(true);
+  }
+
   function abrirEdicionDatos() {
     setNombreEdit(patient.name);
     setGeneroEdit(patient.genero);
@@ -236,7 +244,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
           className={'tab tab-turno' + (addingTurno ? ' active' : '')}
           onClick={() => {
             setTab('calendario');
-            setAddingTurno(true);
+            abrirNuevoTurno();
           }}
         >
           📅 Nuevo turno
@@ -348,14 +356,6 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
                       placeholder="Control mensual, primera consulta..."
                     />
                   </div>
-                  <label className="checkbox-row">
-                    <input
-                      type="checkbox"
-                      checked={nuevoTurno.avisar}
-                      onChange={(e) => setNuevoTurno((t) => ({ ...t, avisar: e.target.checked }))}
-                    />
-                    Avisar al paciente por mail (demo)
-                  </label>
                   <div className="row-actions">
                     <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '11px 18px' }}>
                       Guardar turno
@@ -366,7 +366,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
                   </div>
                 </form>
               ) : (
-                <button className="pill-btn turno-btn" onClick={() => setAddingTurno(true)}>
+                <button className="pill-btn turno-btn" onClick={abrirNuevoTurno}>
                   <span className="ic">📅</span> Nuevo turno
                 </button>
               )}
@@ -532,7 +532,7 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
         title="¿Confirmar el turno?"
         message={
           nuevoTurno.fecha
-            ? `Turno para ${patient.name} el ${new Date(nuevoTurno.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} a las ${nuevoTurno.hora}${nuevoTurno.avisar ? '. Se le va a avisar por mail (demo).' : '.'}`
+            ? `Turno para ${patient.name} el ${new Date(nuevoTurno.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} a las ${nuevoTurno.hora}. Va a verlo apenas entre a la app.`
             : ''
         }
         confirmLabel="Sí, guardar turno"

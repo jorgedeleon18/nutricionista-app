@@ -1,14 +1,53 @@
 import { useState } from 'react';
 import {
   MEAL_ORDER, MEAL_LABELS, registroDelDia, statusForDay, fechaKey,
+  TODAY, MONTH_NAMES, DAY_LETTERS, daysInMonth, firstWeekdayMonday,
 } from '../data/patients.js';
 
 const ICONS = { desayuno: '☀️', colacion: '🍎', almuerzo: '🍽️', merienda: '🍪', cena: '🌙' };
+const HOY_KEY = fechaKey(TODAY.year, TODAY.month, TODAY.day);
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+function fechaHoyLabel() {
+  const d = new Date(TODAY.year, TODAY.month, TODAY.day);
+  const nombreDia = DIAS_SEMANA[d.getDay()];
+  return `${nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1)} ${TODAY.day} de ${MONTH_NAMES[TODAY.month].toLowerCase()}`;
+}
+
+// Calendario real del mes (no una lista fija de días) — así cualquier turno,
+// caiga el día que caiga, se puede ver navegando el mes correspondiente.
+function buildCalendarCells({ year, month, patient, selectedFecha, onSelect }) {
+  const isCurrentMonth = year === TODAY.year && month === TODAY.month;
+  const total = daysInMonth(year, month);
+  const firstDay = firstWeekdayMonday(year, month);
+  const turnos = patient.turnos || [];
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(<div key={'b' + i} className="cell blank" />);
+  for (let d = 1; d <= total; d++) {
+    const fecha = fechaKey(year, month, d);
+    const isToday = isCurrentMonth && d === TODAY.day;
+    const cls = isCurrentMonth ? statusForDay(patient, d) : 'm';
+    const hasTurno = turnos.some((t) => t.fecha === fecha);
+    cells.push(
+      <div
+        key={fecha}
+        className={'cell' + (isToday ? ' today' : '') + (fecha === selectedFecha ? ' sel' : '') + (hasTurno ? ' turno' : '')}
+        onClick={() => onSelect(fecha)}
+      >
+        <span>{d}</span>
+        <span className={'dot ' + cls}></span>
+      </div>
+    );
+  }
+  return cells;
+}
 
 export default function PatientDashboard({ view, onChangeView, patient, onUpdatePatient }) {
   const primerNombre = patient.name.split(' ')[0];
-  const [calDay, setCalDay] = useState(27);
   const [drafts, setDrafts] = useState({});
+  const [calYear, setCalYear] = useState(TODAY.year);
+  const [calMonth, setCalMonth] = useState(TODAY.month);
+  const [calFecha, setCalFecha] = useState(HOY_KEY);
 
   const saved = patient.log || {};
   const filledCount = MEAL_ORDER.filter((k) => saved[k]).length;
@@ -22,15 +61,29 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
 
   const calReg = registroDelDia(patient, 2);
   const turnos = patient.turnos || [];
-  const calFecha = fechaKey(2026, 7, calDay);
-  const turnoDelDia = turnos.find((t) => t.fecha === calFecha);
+  const proximoTurno = turnos
+    .filter((t) => t.fecha >= HOY_KEY)
+    .sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora))[0];
+
+  const calIsCurrentMonth = calYear === TODAY.year && calMonth === TODAY.month;
+  const calSelectedDay = Number(calFecha.split('-')[2]);
+  const calRegSeleccionado = calIsCurrentMonth && calSelectedDay === TODAY.day ? calReg : {};
+  const calHasData = MEAL_ORDER.some((k) => calRegSeleccionado[k]);
+  const turnoDelDiaSeleccionado = turnos.find((t) => t.fecha === calFecha);
+
+  function prevMonth() {
+    if (calMonth === 0) { setCalMonth(11); setCalYear((y) => y - 1); } else setCalMonth((m) => m - 1);
+  }
+  function nextMonth() {
+    if (calMonth === 11) { setCalMonth(0); setCalYear((y) => y + 1); } else setCalMonth((m) => m + 1);
+  }
 
   return (
     <div className="page">
       <div className="detalle-head" style={{ justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>Hola, <span style={{ color: 'var(--pink)' }}>{primerNombre}</span></h1>
-          <p className="sub" style={{ margin: '4px 0 0' }}>Miércoles 27 de agosto</p>
+          <p className="sub" style={{ margin: '4px 0 0' }}>{fechaHoyLabel()}</p>
         </div>
       </div>
 
@@ -42,6 +95,22 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
 
       {view === 'hoy' && (
         <>
+          {proximoTurno && (
+            <button
+              className="turno-chip turno-chip-btn"
+              style={{ width: '100%', marginBottom: 20 }}
+              onClick={() => { setCalFecha(proximoTurno.fecha); onChangeView('calendario'); }}
+            >
+              <span className="ic">📅</span>
+              <div>
+                <b>
+                  {proximoTurno.fecha === HOY_KEY ? 'Turno hoy' : 'Próximo turno'} · {new Date(proximoTurno.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })} a las {proximoTurno.hora}
+                </b>
+                <span>{proximoTurno.motivo || 'Sin motivo especificado'}</span>
+              </div>
+            </button>
+          )}
+
           <div className="progress">
             {MEAL_ORDER.map((k) => <div key={k} className={'bar' + (saved[k] ? ' on' : '')} />)}
           </div>
@@ -77,21 +146,14 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
       {view === 'calendario' && (
         <div className="cal-layout">
           <div className="cal-left">
-            <div className="monthbar"><span className="navbtn">‹</span><b>Agosto 2026</b><span className="navbtn">›</span></div>
-            <div className="dow">{['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i}>{d}</span>)}</div>
+            <div className="monthbar">
+              <span className="navbtn" onClick={prevMonth}>‹</span>
+              <b>{MONTH_NAMES[calMonth]} {calYear}</b>
+              <span className="navbtn" onClick={nextMonth}>›</span>
+            </div>
+            <div className="dow">{DAY_LETTERS.map((d, i) => <span key={i}>{d}</span>)}</div>
             <div className="calgrid">
-              {[23, 24, 25, 26, 27].map((d) => {
-                const hasTurno = turnos.some((t) => t.fecha === fechaKey(2026, 7, d));
-                return (
-                  <div
-                    key={d}
-                    className={'cell' + (d === 27 ? ' today' : '') + (d === calDay ? ' sel' : '') + (hasTurno ? ' turno' : '')}
-                    onClick={() => setCalDay(d)}
-                  >
-                    <span>{d}</span><span className={'dot ' + statusForDay(patient, d)}></span>
-                  </div>
-                );
-              })}
+              {buildCalendarCells({ year: calYear, month: calMonth, patient, selectedFecha: calFecha, onSelect: setCalFecha })}
             </div>
             <div className="legend">
               <span><span className="dot g"></span>Completo</span>
@@ -101,19 +163,26 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
             </div>
           </div>
           <div className="cal-right">
-            <h4>{calDay} de agosto{calDay === 27 ? ' (hoy)' : ''}</h4>
-            {turnoDelDia && (
+            <h4>
+              {new Date(calFecha + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
+              {calFecha === HOY_KEY ? ' (hoy)' : ''}
+            </h4>
+            {turnoDelDiaSeleccionado && (
               <div className="turno-chip">
                 <span className="ic">📅</span>
                 <div>
-                  <b>Turno {turnoDelDia.hora}</b>
-                  <span>{turnoDelDia.motivo || 'Sin motivo especificado'}</span>
+                  <b>Turno {turnoDelDiaSeleccionado.hora}</b>
+                  <span>{turnoDelDiaSeleccionado.motivo || 'Sin motivo especificado'}</span>
                 </div>
               </div>
             )}
-            {MEAL_ORDER.filter((k) => calReg[k]).map((k) => (
-              <div key={k} className="row2"><span className="tag">{MEAL_LABELS[k]}</span><span className="txt">{calReg[k].txt}</span></div>
-            ))}
+            {calHasData ? (
+              MEAL_ORDER.filter((k) => calRegSeleccionado[k]).map((k) => (
+                <div key={k} className="row2"><span className="tag">{MEAL_LABELS[k]}</span><span className="txt">{calRegSeleccionado[k].txt}</span></div>
+              ))
+            ) : (
+              !turnoDelDiaSeleccionado && <p className="empty-day">Sin registros este día.</p>
+            )}
           </div>
         </div>
       )}
