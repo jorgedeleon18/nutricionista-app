@@ -1,50 +1,31 @@
 import { useState } from 'react';
-import { PATIENTS } from '../data/patients.js';
+import { avatarColor, ESTADO_LABEL } from '../data/patients.js';
 
-function emailDesdeNombre(nombre) {
-  const base = nombre
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .trim()
-    .replace(/\s+/g, '.');
-  return `${base}@gmail.com`;
-}
-
-const INITIAL_ACCESOS = Object.entries(PATIENTS).map(([key, p]) => ({
-  key,
-  nombre: p.name,
-  email: emailDesdeNombre(p.name),
-  estado: 'activo',
-}));
-
-const ESTADO_LABEL = { activo: 'Activo', invitado: 'Invitación enviada', inactivo: 'Inactivo' };
-
-export default function GestionAccesos() {
-  const [accesos, setAccesos] = useState(INITIAL_ACCESOS);
+export default function GestionAccesos({ patients, onInvitar, onToggleEstado }) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
+  const [genero, setGenero] = useState('F');
+  const [reenviado, setReenviado] = useState(null);
 
   function handleInvitar(e) {
     e.preventDefault();
     if (!nombre.trim() || !email.trim()) return;
-    setAccesos((list) => [
-      { key: 'nuevo-' + Date.now(), nombre: nombre.trim(), email: email.trim(), estado: 'invitado' },
-      ...list,
-    ]);
+    onInvitar({ nombre: nombre.trim(), email: email.trim(), genero });
     setNombre('');
     setEmail('');
-  }
-
-  function toggleEstado(key) {
-    setAccesos((list) =>
-      list.map((a) => (a.key === key ? { ...a, estado: a.estado === 'inactivo' ? 'activo' : 'inactivo' } : a))
-    );
+    setGenero('F');
   }
 
   function reenviar(key) {
-    setAccesos((list) => list.map((a) => ({ ...a })).filter((a) => a.key === key || true));
+    setReenviado(key);
+    setTimeout(() => setReenviado(null), 2000);
   }
+
+  const filas = Object.entries(patients).sort(([, a], [, b]) => {
+    // invitados primero, después activos, después inactivos
+    const orden = { invitado: 0, activo: 1, inactivo: 2 };
+    return orden[a.acceso] - orden[b.acceso];
+  });
 
   return (
     <div className="page">
@@ -57,7 +38,8 @@ export default function GestionAccesos() {
 
       <div className="accesos-note">
         Esto todavía es una demo (mock): cuando lo conectemos con la base de datos, "Invitar paciente" le va a
-        mandar un mail real para que cree su propia contraseña y pueda entrar a la app.
+        mandar un mail real para que cree su propia contraseña y pueda entrar a la app. Un paciente nuevo arranca
+        con el plan y las mediciones vacías, listos para que los cargues desde su ficha.
       </div>
 
       <form className="invite-form" onSubmit={handleInvitar}>
@@ -73,6 +55,17 @@ export default function GestionAccesos() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="paciente@mail.com"
           />
+        </div>
+        <div className="field" style={{ flex: '0 0 auto', minWidth: 180 }}>
+          <label>Género</label>
+          <div className="role-segs" style={{ marginBottom: 0 }}>
+            <button type="button" className={'role-seg' + (genero === 'F' ? ' active' : '')} onClick={() => setGenero('F')}>
+              Femenino
+            </button>
+            <button type="button" className={'role-seg' + (genero === 'M' ? ' active' : '')} onClick={() => setGenero('M')}>
+              Masculino
+            </button>
+          </div>
         </div>
         <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '13px 22px' }}>
           + Invitar paciente
@@ -90,23 +83,33 @@ export default function GestionAccesos() {
             </tr>
           </thead>
           <tbody>
-            {accesos.map((a) => (
-              <tr key={a.key}>
-                <td>{a.nombre}</td>
+            {filas.map(([key, a]) => (
+              <tr key={key}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span
+                      className="avatar"
+                      style={{ background: avatarColor(a.genero), width: 30, height: 30, fontSize: 11 }}
+                    >
+                      {a.initials}
+                    </span>
+                    {a.name}
+                  </div>
+                </td>
                 <td>{a.email}</td>
                 <td>
-                  <span className={'estado-badge ' + a.estado}>{ESTADO_LABEL[a.estado]}</span>
+                  <span className={'estado-badge ' + a.acceso}>{ESTADO_LABEL[a.acceso]}</span>
                 </td>
                 <td>
                   <div className="row-actions">
-                    {a.estado === 'invitado' && (
-                      <button className="btn-sm" onClick={() => reenviar(a.key)}>
-                        Reenviar invitación
+                    {a.acceso === 'invitado' && (
+                      <button className="btn-sm" onClick={() => reenviar(key)}>
+                        {reenviado === key ? '✓ Mail reenviado' : 'Reenviar invitación'}
                       </button>
                     )}
-                    {a.estado !== 'invitado' && (
-                      <button className="btn-sm danger" onClick={() => toggleEstado(a.key)}>
-                        {a.estado === 'activo' ? 'Dar de baja' : 'Reactivar'}
+                    {a.acceso !== 'invitado' && (
+                      <button className="btn-sm danger" onClick={() => onToggleEstado(key)}>
+                        {a.acceso === 'activo' ? 'Dar de baja' : 'Reactivar'}
                       </button>
                     )}
                   </div>

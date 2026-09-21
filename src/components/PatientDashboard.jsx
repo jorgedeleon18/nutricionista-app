@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
-  PATIENTS, MEAL_ORDER, MEAL_LABELS, registroDelDia, statusForDay,
+  MEAL_ORDER, MEAL_LABELS, registroDelDia, statusForDay,
 } from '../data/patients.js';
 
 const ICONS = { desayuno: '☀️', colacion: '🍎', almuerzo: '🍽️', merienda: '🍪', cena: '🌙' };
 
-export default function PatientDashboard({ view, onChangeView }) {
-  const patient = PATIENTS.sofia;
+export default function PatientDashboard({ view, onChangeView, patient }) {
+  const primerNombre = patient.name.split(' ')[0];
   const [calDay, setCalDay] = useState(27);
   const [drafts, setDrafts] = useState({});
   const [saved, setSaved] = useState({ ...patient.log });
@@ -25,7 +25,7 @@ export default function PatientDashboard({ view, onChangeView }) {
     <div className="page">
       <div className="detalle-head" style={{ justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Hola, <span style={{ color: 'var(--pink)' }}>Sofía</span></h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>Hola, <span style={{ color: 'var(--pink)' }}>{primerNombre}</span></h1>
           <p className="sub" style={{ margin: '4px 0 0' }}>Miércoles 27 de agosto</p>
         </div>
       </div>
@@ -99,19 +99,23 @@ export default function PatientDashboard({ view, onChangeView }) {
 
       {view === 'medidas' && (
         <div className="medidas-box">
-          <table className="medidas-table">
-            <thead><tr><th>Fecha</th><th>Peso (kg)</th><th>Cintura (cm)</th><th>Notas</th></tr></thead>
-            <tbody>
-              {patient.medidas.map((m) => (
-                <tr key={m.fecha}>
-                  <td>{new Date(m.fecha + 'T00:00:00').toLocaleDateString('es-AR')}</td>
-                  <td>{m.peso.toFixed(1)}</td>
-                  <td>{m.cintura}</td>
-                  <td>{m.notas}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {patient.medidas.length > 0 ? (
+            <table className="medidas-table">
+              <thead><tr><th>Fecha</th><th>Peso (kg)</th><th>Cintura (cm)</th><th>Notas</th></tr></thead>
+              <tbody>
+                {patient.medidas.map((m) => (
+                  <tr key={m.fecha}>
+                    <td>{new Date(m.fecha + 'T00:00:00').toLocaleDateString('es-AR')}</td>
+                    <td>{m.peso.toFixed(1)}</td>
+                    <td>{m.cintura}</td>
+                    <td>{m.notas}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="empty-day">Todavía no tenés mediciones cargadas.</p>
+          )}
         </div>
       )}
     </div>

@@ -5,12 +5,22 @@ import Mosaico from './components/Mosaico.jsx';
 import PatientDetail from './components/PatientDetail.jsx';
 import PatientDashboard from './components/PatientDashboard.jsx';
 import GestionAccesos from './components/GestionAccesos.jsx';
+import { PATIENTS as SEED_PATIENTS, emailFromName, blankPatient } from './data/patients.js';
+
+function buildInitialPatients() {
+  const withMeta = {};
+  Object.entries(SEED_PATIENTS).forEach(([key, p]) => {
+    withMeta[key] = { ...p, email: p.email || emailFromName(p.name), acceso: p.acceso || 'activo' };
+  });
+  return withMeta;
+}
 
 export default function App() {
   const [session, setSession] = useState(null); // null | 'nutri' | 'paciente'
   const [openPatient, setOpenPatient] = useState(null);
   const [patientView, setPatientView] = useState('hoy');
   const [showAccesos, setShowAccesos] = useState(false);
+  const [patients, setPatients] = useState(buildInitialPatients);
 
   function handleLogin(role) {
     setSession(role);
@@ -26,6 +36,24 @@ export default function App() {
     setShowAccesos(false);
   }
 
+  function updatePatient(key, updates) {
+    setPatients((prev) => {
+      const cur = prev[key];
+      if (!cur) return prev;
+      const partial = typeof updates === 'function' ? updates(cur) : updates;
+      return { ...prev, [key]: { ...cur, ...partial } };
+    });
+  }
+
+  function addPatient({ nombre, email, genero }) {
+    const key = 'p' + Date.now();
+    setPatients((prev) => ({ ...prev, [key]: blankPatient({ nombre, email, genero }) }));
+  }
+
+  function toggleEstado(key) {
+    updatePatient(key, (prev) => ({ acceso: prev.acceso === 'inactivo' ? 'activo' : 'inactivo' }));
+  }
+
   if (!session) {
     return <Login onLogin={handleLogin} />;
   }
@@ -38,7 +66,7 @@ export default function App() {
           onLogout={handleLogout}
           onBack={patientView !== 'hoy' ? () => setPatientView('hoy') : undefined}
         />
-        <PatientDashboard view={patientView} onChangeView={setPatientView} />
+        <PatientDashboard view={patientView} onChangeView={setPatientView} patient={patients.sofia} />
       </>
     );
   }
@@ -58,11 +86,11 @@ export default function App() {
         }
       />
       {showAccesos ? (
-        <GestionAccesos />
+        <GestionAccesos patients={patients} onInvitar={addPatient} onToggleEstado={toggleEstado} />
       ) : openPatient ? (
-        <PatientDetail patientKey={openPatient} />
+        <PatientDetail patientKey={openPatient} patients={patients} onUpdatePatient={updatePatient} />
       ) : (
-        <Mosaico onOpenPatient={setOpenPatient} onOpenAccesos={() => setShowAccesos(true)} />
+        <Mosaico patients={patients} onOpenPatient={setOpenPatient} onOpenAccesos={() => setShowAccesos(true)} />
       )}
     </>
   );

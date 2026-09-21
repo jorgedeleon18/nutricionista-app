@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  PATIENTS, MEAL_ORDER, MEAL_LABELS, DET_DATES, DET_DAY_LABELS, DAY_LETTERS,
-  registroDelDia, statusForDay,
+  MEAL_ORDER, MEAL_LABELS, DET_DATES, DET_DAY_LABELS, DAY_LETTERS,
+  registroDelDia, statusForDay, avatarColor,
 } from '../data/patients.js';
 
 const TABS = [
@@ -35,22 +35,52 @@ function buildCalendarCells(patient, selectedDay, onSelect) {
   return cells;
 }
 
-export default function PatientDetail({ patientKey }) {
-  const patient = PATIENTS[patientKey];
+const MEDIDA_VACIA = { fecha: '', peso: '', cintura: '', notas: '' };
+
+export default function PatientDetail({ patientKey, patients, onUpdatePatient }) {
+  const patient = patients[patientKey];
   const [tab, setTab] = useState('registro');
   const [dayIndex, setDayIndex] = useState(2); // miércoles 27
   const [calDay, setCalDay] = useState(27);
   const [clinica, setClinica] = useState(patient.historiaClinica);
+  const [clinicaSaved, setClinicaSaved] = useState(false);
   const [plan, setPlan] = useState(patient.plan);
+  const [planSaved, setPlanSaved] = useState(false);
+  const [addingMedida, setAddingMedida] = useState(false);
+  const [nuevaMedida, setNuevaMedida] = useState(MEDIDA_VACIA);
 
   const reg = registroDelDia(patient, dayIndex);
   const calReg = registroDelDia(patient, DET_DATES.indexOf(calDay) >= 0 ? DET_DATES.indexOf(calDay) : 2);
   const calHasData = MEAL_ORDER.some((k) => calReg[k]);
 
+  function handleGuardarPlan() {
+    onUpdatePatient(patientKey, { plan });
+    setPlanSaved(true);
+  }
+
+  function handleGuardarClinica() {
+    onUpdatePatient(patientKey, { historiaClinica: clinica });
+    setClinicaSaved(true);
+  }
+
+  function handleAgregarMedida(e) {
+    e.preventDefault();
+    if (!nuevaMedida.fecha || !nuevaMedida.peso || !nuevaMedida.cintura) return;
+    const nueva = {
+      fecha: nuevaMedida.fecha,
+      peso: parseFloat(nuevaMedida.peso),
+      cintura: parseFloat(nuevaMedida.cintura),
+      notas: nuevaMedida.notas,
+    };
+    onUpdatePatient(patientKey, (prev) => ({ medidas: [...prev.medidas, nueva] }));
+    setNuevaMedida(MEDIDA_VACIA);
+    setAddingMedida(false);
+  }
+
   return (
     <div className="page">
       <div className="detalle-head">
-        <div className="avatar" style={{ background: patient.color, width: 44, height: 44 }}>{patient.initials}</div>
+        <div className="avatar" style={{ background: avatarColor(patient.genero), width: 44, height: 44 }}>{patient.initials}</div>
         <div className="who">
           <b>{patient.name}</b>
           <span>Plan nutricional activo</span>
@@ -75,11 +105,21 @@ export default function PatientDetail({ patientKey }) {
                 <textarea
                   className="meal-edit"
                   rows={3}
+                  placeholder="Todavía no cargaste esta comida"
                   value={plan[k]}
-                  onChange={(e) => setPlan((p) => ({ ...p, [k]: e.target.value }))}
+                  onChange={(e) => {
+                    setPlan((p) => ({ ...p, [k]: e.target.value }));
+                    setPlanSaved(false);
+                  }}
                 />
               </div>
             ))}
+          </div>
+          <div className="save-row">
+            <button className="btn-primary" style={{ width: 'auto', padding: '12px 22px' }} onClick={handleGuardarPlan}>
+              Guardar cambios
+            </button>
+            {planSaved && <span className="saved-msg">✓ Cambios guardados</span>}
           </div>
         </>
       )}
@@ -148,29 +188,98 @@ export default function PatientDetail({ patientKey }) {
       {tab === 'clinica' && (
         <div className="clinica-box">
           <span className="badge">Solo vos la ves — el paciente no accede a esta solapa</span>
-          <textarea value={clinica} onChange={(e) => setClinica(e.target.value)} />
+          <textarea
+            value={clinica}
+            onChange={(e) => {
+              setClinica(e.target.value);
+              setClinicaSaved(false);
+            }}
+          />
+          <div className="save-row">
+            <button className="btn-primary" style={{ width: 'auto', padding: '12px 22px' }} onClick={handleGuardarClinica}>
+              Guardar cambios
+            </button>
+            {clinicaSaved && <span className="saved-msg">✓ Cambios guardados</span>}
+          </div>
         </div>
       )}
 
       {tab === 'medidas' && (
         <div className="medidas-box">
-          <table className="medidas-table">
-            <thead>
-              <tr><th>Fecha</th><th>Peso (kg)</th><th>Cintura (cm)</th><th>Notas de la consulta</th></tr>
-            </thead>
-            <tbody>
-              {patient.medidas.map((m) => (
-                <tr key={m.fecha}>
-                  <td>{new Date(m.fecha + 'T00:00:00').toLocaleDateString('es-AR')}</td>
-                  <td>{m.peso.toFixed(1)}</td>
-                  <td>{m.cintura}</td>
-                  <td>{m.notas}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {patient.medidas.length > 0 ? (
+            <table className="medidas-table">
+              <thead>
+                <tr><th>Fecha</th><th>Peso (kg)</th><th>Cintura (cm)</th><th>Notas de la consulta</th></tr>
+              </thead>
+              <tbody>
+                {patient.medidas.map((m) => (
+                  <tr key={m.fecha}>
+                    <td>{new Date(m.fecha + 'T00:00:00').toLocaleDateString('es-AR')}</td>
+                    <td>{m.peso.toFixed(1)}</td>
+                    <td>{m.cintura}</td>
+                    <td>{m.notas}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="empty-day">Todavía no hay mediciones cargadas.</p>
+          )}
+
           <div className="medidas-foot">
-            <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px' }}>+ Cargar medición de hoy</button>
+            {addingMedida ? (
+              <form className="medida-form" onSubmit={handleAgregarMedida}>
+                <div className="field">
+                  <label>Fecha</label>
+                  <input
+                    type="date"
+                    value={nuevaMedida.fecha}
+                    onChange={(e) => setNuevaMedida((m) => ({ ...m, fecha: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label>Peso (kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={nuevaMedida.peso}
+                    onChange={(e) => setNuevaMedida((m) => ({ ...m, peso: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label>Cintura (cm)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={nuevaMedida.cintura}
+                    onChange={(e) => setNuevaMedida((m) => ({ ...m, cintura: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="field" style={{ flex: '2 1 220px' }}>
+                  <label>Notas</label>
+                  <input
+                    value={nuevaMedida.notas}
+                    onChange={(e) => setNuevaMedida((m) => ({ ...m, notas: e.target.value }))}
+                    placeholder="Notas de la consulta"
+                  />
+                </div>
+                <div className="row-actions">
+                  <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '13px 18px' }}>
+                    Guardar
+                  </button>
+                  <button type="button" className="btn-sm" onClick={() => { setAddingMedida(false); setNuevaMedida(MEDIDA_VACIA); }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px' }} onClick={() => setAddingMedida(true)}>
+                + Cargar medición
+              </button>
+            )}
           </div>
         </div>
       )}

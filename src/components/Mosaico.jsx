@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { PATIENTS, statusOf } from '../data/patients.js';
+import { statusOf, avatarColor, ESTADO_LABEL } from '../data/patients.js';
 
-export default function Mosaico({ onOpenPatient, onOpenAccesos }) {
+export default function Mosaico({ patients, onOpenPatient, onOpenAccesos }) {
   const [query, setQuery] = useState('');
-  const entries = useMemo(() => Object.entries(PATIENTS), []);
+  const entries = useMemo(() => Object.entries(patients), [patients]);
   const filtered = entries.filter(([, p]) => p.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
@@ -32,10 +32,18 @@ export default function Mosaico({ onOpenPatient, onOpenAccesos }) {
           const st = statusOf(p);
           return (
             <button key={key} className="pcard" onClick={() => onOpenPatient(key)}>
-              <div className="avatar" style={{ background: p.color }}>{p.initials}</div>
+              <div className="avatar" style={{ background: avatarColor(p.genero) }}>{p.initials}</div>
               <div>
                 <div className="name">{p.name}</div>
-                <div className="status"><span className={'dot ' + st.cls}></span>{st.label}</div>
+                <div className="status">
+                  {p.acceso === 'activo' ? (
+                    <>
+                      <span className={'dot ' + st.cls}></span>{st.label}
+                    </>
+                  ) : (
+                    <span className={'estado-badge ' + p.acceso}>{ESTADO_LABEL[p.acceso]}</span>
+                  )}
+                </div>
               </div>
               <span className="chev">›</span>
             </button>

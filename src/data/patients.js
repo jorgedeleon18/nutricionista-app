@@ -27,7 +27,7 @@ const clinicalNote = (txt) => txt;
 
 export const PATIENTS = {
   sofia: {
-    name: 'Sofía De Dalessandre', initials: 'SD', color: 'var(--pink)',
+    name: 'Sofía De Dalessandre', initials: 'SD', genero: 'F',
     plan: {
       desayuno: 'Tostada de pan integral con huevo y clara + puñado de almendras + café',
       colacion: 'Yogur descremado light',
@@ -56,7 +56,7 @@ export const PATIENTS = {
     ),
   },
   martina: {
-    name: 'Martina Ruiz', initials: 'MR', color: 'var(--green)',
+    name: 'Martina Ruiz', initials: 'MR', genero: 'F',
     plan: {
       desayuno: 'Infusión + tostada integral con queso untable y fruta',
       colacion: 'Barrita Integra',
@@ -76,7 +76,7 @@ export const PATIENTS = {
     historiaClinica: clinicalNote('Hipotiroidismo compensado bajo tratamiento médico. Controlar consumo de sodio. Buena tolerancia al plan actual.'),
   },
   carlos: {
-    name: 'Carlos Gómez', initials: 'CG', color: 'var(--pink)',
+    name: 'Carlos Gómez', initials: 'CG', genero: 'M',
     plan: {
       desayuno: 'Infusión + dos tostadas de arroz con queso untable y huevo',
       colacion: 'Un puñado de frutos secos',
@@ -90,7 +90,7 @@ export const PATIENTS = {
     historiaClinica: clinicalNote('Hipertensión arterial, en tratamiento. Sin registros de carga esta semana — hacer seguimiento telefónico.'),
   },
   elena: {
-    name: 'Elena Beltrán', initials: 'EB', color: 'var(--green)',
+    name: 'Elena Beltrán', initials: 'EB', genero: 'F',
     plan: {
       desayuno: 'Infusión + rapidita integral con huevo y palta',
       colacion: 'Una fruta',
@@ -110,7 +110,7 @@ export const PATIENTS = {
     historiaClinica: clinicalNote('Sin antecedentes relevantes. Deportista amateur (running 3 veces por semana), plan ajustado a su gasto energético.'),
   },
   julian: {
-    name: 'Julián Peralta', initials: 'JP', color: 'var(--pink)',
+    name: 'Julián Peralta', initials: 'JP', genero: 'M',
     plan: {
       desayuno: 'Infusión + 2 huevos revueltos con tostadas integrales',
       colacion: 'Un puñado de almendras',
@@ -130,7 +130,7 @@ export const PATIENTS = {
     historiaClinica: clinicalNote('Diabetes tipo 2, en seguimiento con clínico. Priorizar bajo índice glucémico en colaciones.'),
   },
   noelia: {
-    name: 'Noelia Acosta', initials: 'NA', color: 'var(--green)',
+    name: 'Noelia Acosta', initials: 'NA', genero: 'F',
     plan: {
       desayuno: 'Infusión + yogur con granola casera',
       colacion: 'Una fruta de estación',
@@ -150,7 +150,7 @@ export const PATIENTS = {
     historiaClinica: clinicalNote('Sin antecedentes relevantes. Embarazo de 14 semanas — plan supervisado junto a su obstetra.'),
   },
   matias: {
-    name: 'Matías Fernández', initials: 'MF', color: 'var(--pink)',
+    name: 'Matías Fernández', initials: 'MF', genero: 'M',
     plan: {
       desayuno: 'Café con leche descremada + tostadas integrales con queso untable',
       colacion: 'Barrita de cereal',
@@ -164,7 +164,7 @@ export const PATIENTS = {
     historiaClinica: clinicalNote('Colesterol LDL elevado en último análisis. Reforzar consumo de fibra y controlar grasas saturadas.'),
   },
   valentina: {
-    name: 'Valentina Suárez', initials: 'VS', color: 'var(--green)',
+    name: 'Valentina Suárez', initials: 'VS', genero: 'F',
     plan: {
       desayuno: 'Infusión + tostada integral con palta y huevo',
       colacion: 'Un puñado de frutos secos',
@@ -215,4 +215,48 @@ export function statusForDay(p, day) {
   if (filled === 0) return 'm';
   if (filled === MEAL_ORDER.length) return 'g';
   return 'a';
+}
+
+// ---------- Gestión de accesos / altas de pacientes ----------
+
+export const ESTADO_LABEL = { activo: 'Activo', invitado: 'Invitación enviada', inactivo: 'Inactivo' };
+
+// Verde para varones, rosa para mujeres — así lo pidió Florencia para el mosaico.
+export function avatarColor(genero) {
+  return genero === 'M' ? 'var(--green)' : 'var(--pink)';
+}
+
+export function initialsFromName(nombre) {
+  const parts = nombre.trim().split(/\s+/);
+  const first = parts[0]?.[0] || '';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  return (first + last).toUpperCase();
+}
+
+export function emailFromName(nombre) {
+  const base = nombre
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+    .replace(/\s+/g, '.');
+  return `${base}@gmail.com`;
+}
+
+// Paciente nuevo invitado desde "Gestión de accesos": arranca con el plan y las
+// mediciones vacías para que la nutricionista los cargue antes o después de que
+// el paciente confirme su cuenta.
+export function blankPatient({ nombre, email, genero }) {
+  return {
+    name: nombre,
+    initials: initialsFromName(nombre),
+    genero: genero || 'F',
+    email: email || emailFromName(nombre),
+    plan: Object.fromEntries(MEAL_ORDER.map((k) => [k, ''])),
+    log: Object.fromEntries(MEAL_ORDER.map((k) => [k, null])),
+    history: {},
+    medidas: [],
+    historiaClinica: '',
+    acceso: 'invitado',
+  };
 }
