@@ -71,6 +71,19 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
   const calHasData = MEAL_ORDER.some((k) => calRegSeleccionado[k]);
   const turnoDelDiaSeleccionado = turnos.find((t) => t.fecha === calFecha);
 
+  // Al abrir la pestaña "Calendario" (desde el menú, no desde el aviso de
+  // arriba) llevamos directo al mes del próximo turno si hay uno — así el
+  // paciente no tiene que ir adivinando a qué mes navegar para verlo.
+  function irACalendario() {
+    if (proximoTurno) {
+      const [y, m] = proximoTurno.fecha.split('-').map(Number);
+      setCalYear(y);
+      setCalMonth(m - 1);
+      setCalFecha(proximoTurno.fecha);
+    }
+    onChangeView('calendario');
+  }
+
   function prevMonth() {
     if (calMonth === 0) { setCalMonth(11); setCalYear((y) => y - 1); } else setCalMonth((m) => m - 1);
   }
@@ -89,7 +102,7 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
 
       <div className="patient-nav">
         <button className={view === 'hoy' ? 'active' : ''} onClick={() => onChangeView('hoy')}>Hoy</button>
-        <button className={view === 'calendario' ? 'active' : ''} onClick={() => onChangeView('calendario')}>Calendario</button>
+        <button className={view === 'calendario' ? 'active' : ''} onClick={irACalendario}>Calendario</button>
         <button className={view === 'medidas' ? 'active' : ''} onClick={() => onChangeView('medidas')}>Mediciones</button>
       </div>
 
@@ -99,13 +112,7 @@ export default function PatientDashboard({ view, onChangeView, patient, onUpdate
             <button
               className="turno-chip turno-chip-btn"
               style={{ width: '100%', marginBottom: 20 }}
-              onClick={() => {
-                const [y, m] = proximoTurno.fecha.split('-').map(Number);
-                setCalYear(y);
-                setCalMonth(m - 1);
-                setCalFecha(proximoTurno.fecha);
-                onChangeView('calendario');
-              }}
+              onClick={irACalendario}
             >
               <span className="ic">📅</span>
               <div>
