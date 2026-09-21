@@ -63,6 +63,8 @@ button, input, textarea{font-family:inherit;}
 .role-segs{display:flex; gap:6px; padding:5px; border-radius:14px; background:var(--pink-soft); margin-bottom:24px;}
 .role-seg{flex:1; text-align:center; padding:11px 6px; border-radius:10px; font-size:13px; font-weight:800; color:var(--muted); cursor:pointer; border:none; background:none;}
 .role-seg.active{background:var(--green); color:#fff;}
+.role-seg.active.f{background:var(--pink); color:#fff;}
+.role-seg.active.m{background:var(--green); color:#fff;}
 .field{margin-bottom:16px;}
 .field label{display:block; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:7px;}
 .field input{

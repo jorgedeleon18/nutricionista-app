@@ -69,6 +69,9 @@ export async function persistPaciente(id, partial) {
   if ('history' in partial) dbPatch.history = partial.history;
   if ('medidas' in partial) dbPatch.medidas = partial.medidas;
   if ('historiaClinica' in partial) dbPatch.historia_clinica = partial.historiaClinica;
+  if ('name' in partial) dbPatch.nombre = partial.name;
+  if ('genero' in partial) dbPatch.genero = partial.genero;
+  if ('initials' in partial) dbPatch.iniciales = partial.initials;
   if (Object.keys(dbPatch).length === 0) return;
   const { error } = await supabase.from('pacientes').update(dbPatch).eq('id', id);
   if (error) throw error;

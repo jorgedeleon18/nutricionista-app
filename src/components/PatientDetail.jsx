@@ -59,6 +59,13 @@ const MEDIDA_VACIA = { fecha: '', peso: '', cintura: '', notas: '' };
 const TURNO_VACIO = { fecha: '', hora: '', motivo: '', avisar: true };
 const HOY_KEY = fechaKey(TODAY.year, TODAY.month, TODAY.day);
 
+function inicialesDe(nombre) {
+  const partes = nombre.trim().split(/\s+/);
+  const first = partes[0]?.[0] || '';
+  const last = partes.length > 1 ? partes[partes.length - 1][0] : '';
+  return (first + last).toUpperCase();
+}
+
 export default function PatientDetail({ patientKey, patients, onUpdatePatient, onAddTurno, onCancelTurno }) {
   const patient = patients[patientKey];
   const [tab, setTab] = useState('registro');
@@ -76,6 +83,9 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
   const [nuevoTurno, setNuevoTurno] = useState(TURNO_VACIO);
   const [confirmTurno, setConfirmTurno] = useState(false);
   const [confirmCancelTurno, setConfirmCancelTurno] = useState(null);
+  const [editandoDatos, setEditandoDatos] = useState(false);
+  const [nombreEdit, setNombreEdit] = useState(patient.name);
+  const [generoEdit, setGeneroEdit] = useState(patient.genero);
 
   const reg = registroDelDia(patient, dayIndex);
 
@@ -139,6 +149,23 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
     setConfirmTurno(false);
   }
 
+  function abrirEdicionDatos() {
+    setNombreEdit(patient.name);
+    setGeneroEdit(patient.genero);
+    setEditandoDatos(true);
+  }
+
+  function guardarDatos(e) {
+    e.preventDefault();
+    if (!nombreEdit.trim()) return;
+    onUpdatePatient(patientKey, {
+      name: nombreEdit.trim(),
+      genero: generoEdit,
+      initials: inicialesDe(nombreEdit),
+    });
+    setEditandoDatos(false);
+  }
+
   function pedirCancelarTurno(t) {
     setConfirmCancelTurno(t);
   }
@@ -159,7 +186,44 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
           <b>{patient.name}</b>
           <span>Plan nutricional activo</span>
         </div>
+        {!editandoDatos && (
+          <button
+            type="button"
+            className="btn-sm"
+            style={{ marginLeft: 'auto' }}
+            onClick={abrirEdicionDatos}
+            title="Editar nombre o género"
+          >
+            ✎ Editar datos
+          </button>
+        )}
       </div>
+
+      {editandoDatos && (
+        <form className="invite-form" style={{ marginBottom: 24 }} onSubmit={guardarDatos}>
+          <div className="field">
+            <label>Nombre del paciente</label>
+            <input value={nombreEdit} onChange={(e) => setNombreEdit(e.target.value)} placeholder="Nombre y apellido" />
+          </div>
+          <div className="field" style={{ flex: '0 0 auto', minWidth: 180 }}>
+            <label>Género</label>
+            <div className="role-segs" style={{ marginBottom: 0 }}>
+              <button type="button" className={'role-seg' + (generoEdit === 'F' ? ' active f' : '')} onClick={() => setGeneroEdit('F')}>
+                Femenino
+              </button>
+              <button type="button" className={'role-seg' + (generoEdit === 'M' ? ' active m' : '')} onClick={() => setGeneroEdit('M')}>
+                Masculino
+              </button>
+            </div>
+          </div>
+          <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '13px 22px' }}>
+            Guardar
+          </button>
+          <button type="button" className="btn-sm" onClick={() => setEditandoDatos(false)}>
+            Cancelar
+          </button>
+        </form>
+      )}
 
       <div className="tabs">
         {TABS.map((t) => (

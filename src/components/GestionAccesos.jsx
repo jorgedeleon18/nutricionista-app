@@ -104,10 +104,10 @@ export default function GestionAccesos({ patients, onInvitar, onToggleEstado, on
         <div className="field" style={{ flex: '0 0 auto', minWidth: 180 }}>
           <label>Género</label>
           <div className="role-segs" style={{ marginBottom: 0 }}>
-            <button type="button" className={'role-seg' + (genero === 'F' ? ' active' : '')} onClick={() => setGenero('F')}>
+            <button type="button" className={'role-seg' + (genero === 'F' ? ' active f' : '')} onClick={() => setGenero('F')}>
               Femenino
             </button>
-            <button type="button" className={'role-seg' + (genero === 'M' ? ' active' : '')} onClick={() => setGenero('M')}>
+            <button type="button" className={'role-seg' + (genero === 'M' ? ' active m' : '')} onClick={() => setGenero('M')}>
               Masculino
             </button>
           </div>
