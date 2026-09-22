@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import {
-  MEAL_ORDER, MEAL_LABELS, DET_DATES, DET_DAY_LABELS, DAY_LETTERS,
-  registroDelDia, statusForDay, avatarColor,
+  MEAL_ORDER, MEAL_LABELS,
+  statusForDay, avatarColor,
   TODAY, MONTH_NAMES, fechaKey, daysInMonth, firstWeekdayMonday,
 } from '../data/patients.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
 const TABS = [
   { key: 'plan', label: 'Plan asignado' },
-  { key: 'registro', label: 'Registro del día' },
   { key: 'calendario', label: 'Calendario' },
   { key: 'clinica', label: 'Historia clínica' },
   { key: 'medidas', label: 'Mediciones' },
@@ -68,8 +67,7 @@ function inicialesDe(nombre) {
 
 export default function PatientDetail({ patientKey, patients, onUpdatePatient, onAddTurno, onUpdateTurno, onCancelTurno }) {
   const patient = patients[patientKey];
-  const [tab, setTab] = useState('registro');
-  const [dayIndex, setDayIndex] = useState(2); // miércoles 27
+  const [tab, setTab] = useState('calendario');
   const [calYear, setCalYear] = useState(TODAY.year);
   const [calMonth, setCalMonth] = useState(TODAY.month);
   const [calFecha, setCalFecha] = useState(HOY_KEY);
@@ -87,8 +85,6 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
   const [editandoDatos, setEditandoDatos] = useState(false);
   const [nombreEdit, setNombreEdit] = useState(patient.name);
   const [generoEdit, setGeneroEdit] = useState(patient.genero);
-
-  const reg = registroDelDia(patient, dayIndex);
 
   const calIsCurrentMonth = calYear === TODAY.year && calMonth === TODAY.month;
   const calSelectedDay = Number(calFecha.split('-')[2]);
@@ -267,8 +263,12 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
           type="button"
           className={'tab tab-turno' + (addingTurno ? ' active' : '')}
           onClick={() => {
-            setTab('calendario');
-            abrirNuevoTurno();
+            if (addingTurno) {
+              cancelarFormularioTurno();
+            } else {
+              setTab('calendario');
+              abrirNuevoTurno();
+            }
           }}
         >
           📅 Nuevo turno
@@ -300,33 +300,6 @@ export default function PatientDetail({ patientKey, patients, onUpdatePatient, o
               Guardar cambios
             </button>
             {planSaved && <span className="saved-msg">✓ Cambios guardados</span>}
-          </div>
-        </>
-      )}
-
-      {tab === 'registro' && (
-        <>
-          <div className="days">
-            {DAY_LETTERS.map((letter, i) => (
-              <button key={i} className={'day' + (i === dayIndex ? ' active' : '')} onClick={() => setDayIndex(i)}>
-                {letter}
-              </button>
-            ))}
-          </div>
-          <div className="meal-grid">
-            <p className="day-label">{DET_DAY_LABELS[DET_DATES[dayIndex]]}</p>
-            {MEAL_ORDER.map((k) => {
-              const entry = reg[k];
-              return (
-                <div key={k} className={'meal' + (entry ? '' : ' empty')}>
-                  <div className="meal-top">
-                    <span className="meal-name">{MEAL_LABELS[k]}</span>
-                    <span className="meal-time">{entry && entry.time ? entry.time : '—'}</span>
-                  </div>
-                  <div className="meal-txt">{entry ? entry.txt : 'Sin registro este día'}</div>
-                </div>
-              );
-            })}
           </div>
         </>
       )}
